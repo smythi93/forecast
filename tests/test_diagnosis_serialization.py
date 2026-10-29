@@ -3,6 +3,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from sflkit.analysis.analysis_type import MetaEvent
+from sflkit.analysis.predicate import Comp, ReturnPredicate
 from sflkit.analysis.spectra import Line
 from sflkit.features.value import BinaryFeature
 from sflkitlib.events.event import LineEvent
@@ -14,6 +16,7 @@ from forecast.diagnosis import (
     Divergence,
     Forecast,
     FunctionNames,
+    Interpreter,
 )
 from forecast.integration import DiagnosisSerializer, diagnosis_text_from_json
 
@@ -154,6 +157,28 @@ class DivergenceTextTests(unittest.TestCase):
             "The failing run called app/tokens.py:__init__, which no passing run called",
             divergence.to_text(),
         )
+
+
+class ReturnTextTests(unittest.TestCase):
+    @staticmethod
+    def text(op: Comp, value, negate: bool = False) -> str:
+        predicate = ReturnPredicate(MetaEvent("app.py", 7, function="load"), op, value)
+        return Interpreter.interpret_return(predicate, negate=negate)
+
+    def test_numbers_are_compared_with_zero(self):
+        self.assertEqual("Function load in app.py:7 returns > 0", self.text(Comp.GT, 0))
+        self.assertEqual("Function load in app.py:7 returns <= 0", self.text(Comp.GT, 0, negate=True))
+
+    def test_none_is_named_as_none(self):
+        self.assertEqual("Function load in app.py:7 returns None", self.text(Comp.EQ, None))
+        self.assertEqual("Function load in app.py:7 does not return None", self.text(Comp.NE, None))
+        self.assertEqual(
+            "Function load in app.py:7 does not return None", self.text(Comp.EQ, None, negate=True)
+        )
+
+    def test_empty_strings_and_bytes_are_named(self):
+        self.assertEqual("Function load in app.py:7 returns an empty string", self.text(Comp.EQ, ""))
+        self.assertEqual("Function load in app.py:7 does not return empty bytes", self.text(Comp.NE, b""))
 
 
 class SerializationTests(unittest.TestCase):

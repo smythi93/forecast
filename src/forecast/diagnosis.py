@@ -295,14 +295,30 @@ class Interpreter:
     @staticmethod
     def interpret_return(feature: ReturnPredicate, negate: bool = False) -> str:
         """
-        Describe a return-value predicate (comparison against 0).
+        Describe a return-value predicate.
+
+        ``sflkit`` compares numbers with 0, strings with ``""``, bytes with
+        ``b""``, and anything else with ``None``; only numbers take an order.
 
         :param feature: The predicate feature.
         :param negate: Negate the comparison.
         :returns: Natural-language description.
         """
         op = Interpreter.adjust_op(feature.op, negate)
-        return f"Function {feature.function} in {feature.file}:{feature.line} returns {op.value} 0"
+        value = getattr(feature, "value", 0)
+        function = f"Function {feature.function} in {feature.file}:{feature.line}"
+        if value is None or isinstance(value, (str, bytes)):
+            what = {
+                None: "None",
+                "": "an empty string",
+                b"": "empty bytes",
+            }.get(value, repr(value))
+            if op == Comp.EQ:
+                return f"{function} returns {what}"
+            if op == Comp.NE:
+                return f"{function} does not return {what}"
+            return f"{function} returns {op.value} {what}"
+        return f"{function} returns {op.value} {value}"
 
     @staticmethod
     def interpret_scalar_pair(feature: ScalarPair, negate: bool = False) -> str:
@@ -1441,7 +1457,11 @@ class Forecast:
 
         # Calculate discriminability score for each feature
         feature_scores = []
-        for feature in set(passing_features.keys()) | set(failing_features.keys()):
+        # Sorted, so that ties between equally scored candidates break the same
+        # way in every run; set order depends on string hashing.
+        for feature in sorted(
+            set(passing_features.keys()) | set(failing_features.keys()), key=str
+        ):
             fail_with = failing_features.get(feature, {}).get(FeatureValue.TRUE, 0)
             not_fail_with = failing_features.get(feature, {}).get(FeatureValue.FALSE, 0)
             pass_with = passing_features.get(feature, {}).get(FeatureValue.TRUE, 0)

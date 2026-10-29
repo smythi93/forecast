@@ -396,6 +396,11 @@ def _handle_tree(args):
     dump_tree(tree, tree_path, compress=not getattr(args, "no_compress_tree", False))
     log.info("Tree saved to %s", tree_path)
 
+    # Nodes are marked discriminative only while diagnosing; mark them here so
+    # the summary counts them.
+    from forecast.diagnosis import Forecast
+
+    Forecast(root=tree)._mark_discriminative_nodes(tree)
     n_nodes = _count_tree_nodes(tree)
     n_discriminative = _count_discriminative_nodes(tree)
     log.info(
@@ -409,15 +414,23 @@ def _handle_tree(args):
         PrintTreeVisitor().traverse(tree)
 
 
+def _tree_nodes(tree):
+    """Yield every node of the tree (iteratively: call trees can be very deep)."""
+    stack = [tree]
+    while stack:
+        node = stack.pop()
+        yield node
+        stack.extend(node.children.values())
+
+
 def _count_tree_nodes(tree) -> int:
-    """Recursively count all nodes in the tree."""
-    return 1 + sum(_count_tree_nodes(c) for c in tree.children.values())
+    """Count all nodes in the tree."""
+    return sum(1 for _ in _tree_nodes(tree))
 
 
 def _count_discriminative_nodes(tree) -> int:
-    """Recursively count discriminative nodes."""
-    own = 1 if tree.is_discriminative else 0
-    return own + sum(_count_discriminative_nodes(c) for c in tree.children.values())
+    """Count discriminative nodes."""
+    return sum(1 for node in _tree_nodes(tree) if node.is_discriminative)
 
 
 def _handle_diagnose(args):
@@ -462,7 +475,7 @@ def _handle_diagnose(args):
 
     forecast = Forecast(root=tree)
     diagnosis = forecast.derive_diagnosis()
-    mapping_path = data_dir / "events" / "mapping.json"
+    mapping_path = data_dir / "mapping.json"
     if Path(args.src).is_dir() and mapping_path.exists():
         from forecast.diagnosis import FunctionNames
 

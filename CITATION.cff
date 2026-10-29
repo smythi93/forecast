@@ -9,8 +9,8 @@ authors:
     email: marius.smytzek@cispa.de
     orcid: "https://orcid.org/0000-0002-4899-9031"
     affiliation: "CISPA Helmholtz Center for Information Security"
-version: 0.1.0
-date-released: 2026-10-29
+version: 0.1.1
+date-released: 2026-10-30
 license: Apache-2.0
 repository-code: "https://github.com/smythi93/forecast"
 url: "https://pypi.org/project/forecast-repair/"

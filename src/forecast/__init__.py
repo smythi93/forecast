@@ -75,7 +75,7 @@ from forecast.plugins import (
 # ── Logging ───────────────────────────────────────────────────────────────────
 from forecast.logger import get_logger, LOGGER
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     # diagnosis
