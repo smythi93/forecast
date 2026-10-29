@@ -417,7 +417,7 @@ def truncation(res):
     print("## Answers cut off at their token limit\n")
     print("Per answer length an agent requested and the one the model got: answers, and those that "
           "stopped at that length. Agentless requests 300 tokens for localization and 1024 for "
-          "repair and tests; FORECAST raises both to 4096 (in the Haiku baseline, not yet).\n")
+          "repair and tests; FORECAST raises both to 4096 in both modes.\n")
     for agent in AGENTS:
         rows = []
         for m in res["repairs"]:
