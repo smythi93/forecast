@@ -1,8 +1,8 @@
 {
  "top": {
   "files": 2,
-  "raw_bytes": 3446648,
-  "tar_bytes": 3448320,
+  "raw_bytes": 3431338,
+  "tar_bytes": 3432960,
   "rewritten": 0,
   "forbidden_hits": {
    "$ANTHROPIC_API_KEY": 0,
