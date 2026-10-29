@@ -1,0 +1,32 @@
+{
+  "name": "agentless",
+  "github": "https://github.com/OpenAutoCoder/Agentless",
+  "doi": "10.48550/arXiv.2407.01489",
+  "open_source": true,
+  "license": "MIT License",
+  "downloaded_at": "2026-04-30",
+  "local": {
+    "repo_path": "agents/repos/agentless",
+    "repo_commit": "5ce5888b9f149beaace393957a55ea8ee46c9f71",
+    "paper_pdf_path": "agents/papers/agentless_10.48550_arXiv.2407.01489.pdf"
+  },
+  "paper": {
+    "doi_url": "https://doi.org/10.48550/arXiv.2407.01489",
+    "resolved_abs_url": "https://arxiv.org/abs/2407.01489",
+    "pdf_url": "https://arxiv.org/pdf/2407.01489.pdf"
+  },
+  "approach": {
+    "style": "agentless staged pipeline",
+    "phases": [
+      "hierarchical localization: file -> class/function -> edit region",
+      "repair by sampling multiple patch candidates",
+      "validation with regression/reproduction tests and reranking",
+      "select final patch"
+    ],
+    "tooling": [
+      "no long-horizon interactive agent loop",
+      "structured localization and reranking pipeline"
+    ],
+    "implementation_mode": "upstream, its SWE-bench recipe replayed stage by stage from the pinned checkout without embedding retrieval; FORECAST supplies issue text, model transport, and a harness-API shim"
+  }
+}

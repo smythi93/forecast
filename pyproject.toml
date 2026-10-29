@@ -1,0 +1,98 @@
+[build-system]
+requires = [
+    "setuptools",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forecast"
+dynamic = ["version"]
+authors = [
+    { name = "Marius Smytzek", email = "marius.smytzek@cispa.de" },
+]
+description = "FORECAST is a debugging approach that generates diagnoses to boost repair agents."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.12, <4"
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Software Development :: Localization",
+]
+dependencies = [
+    "sflkit>=0.5.5",
+    "sflkitlib",
+    "tqdm>=4.67.3",
+    "anthropic>=0.84.0",
+    "openai>=2.24.0",
+    "coverage>=7.13.4",
+    "docker>=7.1.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/smythi93/forecast"
+"Bug Tracker" = "https://github.com/smythi93/forecast/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "forecast.__version__"}
+
+[project.scripts]
+forecast = "forecast.cli:main"
+
+[project.entry-points."forecast.plugins"]
+AutoCodeRover = "forecast.agents.acr"
+Agentless = "forecast.agents.agentless"
+SWEAgent = "forecast.agents.swe_agent"
+MiniSWEAgent = "forecast.agents.mini_swe_agent"
+RepairAgent = "forecast.agents.repair_agent"
+MockAgent = "forecast.agents.mock_agent.mock_agent"
+
+# only include packages in src/
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# The license of RepairAgent, whose prompts the repair-agent port adapts.
+[tool.setuptools.package-data]
+"forecast.agents.repair_agent" = ["LICENSE"]
+
+[project.optional-dependencies]
+# Alternative trace codec; gzip (stdlib) is the default and needs nothing extra.
+zstd = [
+    "zstandard>=0.23.0"
+]
+# Published repair agents FORECAST integrates (see agents/install_upstream.py
+# for SWE-agent and Agentless, which run from pinned checkouts).
+agents = [
+    "litellm>=1.75.5,!=1.82.7,!=1.82.8",
+    "mini-swe-agent==2.4.6",
+    "libcst>=1.1",
+    "tiktoken>=0.7",
+    "jsonlines>=4.0",
+    "datasets>=2.18"
+]
+test = [
+    "pytest>=8.4.2",
+    "pytest-html>=4.1.1",
+    "tqdm>=4.67.1",
+    "swebench>=4.1.0,<5"
+]
+evaluation = [
+    "tqdm>=4.67.1",
+    "swebench>=4.1.0,<5"
+]
+all = [
+    "pytest>=8.4.2",
+    "pytest-html>=4.1.1",
+    "tqdm>=4.67.1",
+    "swebench>=4.1.0,<5"
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']

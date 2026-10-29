@@ -1,0 +1,33 @@
+{
+  "name": "swe-agent",
+  "github": "https://github.com/SWE-agent/SWE-agent",
+  "doi": "10.48550/arXiv.2405.15793",
+  "open_source": true,
+  "license": "MIT License",
+  "downloaded_at": "2026-04-30",
+  "local": {
+    "repo_path": "agents/repos/swe-agent",
+    "repo_commit": "0f4f3bba990e01ca8460b9963abdcd89e38042f2",
+    "paper_pdf_path": "agents/papers/swe-agent_10.48550_arXiv.2405.15793.pdf"
+  },
+  "paper": {
+    "doi_url": "https://doi.org/10.48550/arXiv.2405.15793",
+    "resolved_abs_url": "https://arxiv.org/abs/2405.15793",
+    "pdf_url": "https://arxiv.org/pdf/2405.15793.pdf"
+  },
+  "approach": {
+    "style": "tool-augmented software engineering agent",
+    "phases": [
+      "read issue and gather repository context",
+      "iterate with tool calls for navigation, editing, and testing",
+      "propose and refine patch candidates from feedback",
+      "return final patch after validation"
+    ],
+    "tooling": [
+      "agent-computer interface",
+      "configurable toolset and history processing",
+      "benchmark-oriented SWE-bench workflow"
+    ],
+    "implementation_mode": "upstream, run unmodified from the pinned checkout (config/benchmarks/250522_anthropic_filemap_simple_review.yaml); FORECAST supplies issue text, model transport (ModelClient.chat), and instance image"
+  }
+}

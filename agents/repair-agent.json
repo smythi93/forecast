@@ -1,0 +1,36 @@
+{
+  "name": "repair-agent",
+  "github": "https://github.com/sola-st/RepairAgent",
+  "doi": "10.48550/arXiv.2403.17134",
+  "open_source": true,
+  "license": "MIT License",
+  "downloaded_at": "2026-05-04",
+  "local": {
+    "repo_path": "agents/repos/repair-agent",
+    "repo_commit": "8b54afcefa9f09d67e058ef2dd77ba142bb9a317",
+    "paper_pdf_path": "agents/papers/repair-agent_10.48550_arXiv.2403.17134.pdf"
+  },
+  "paper": {
+    "doi_url": "https://doi.org/10.48550/arXiv.2403.17134",
+    "resolved_abs_url": "https://arxiv.org/abs/2403.17134",
+    "pdf_url": "https://arxiv.org/pdf/2403.17134.pdf"
+  },
+  "approach": {
+    "style": "autonomous llm repair agent with dynamic prompting",
+    "phases": [
+      "initialize dynamic prompt with role, goals, guidelines, and current state",
+      "let the model choose and invoke repair tools through middleware",
+      "update prompt with tool outputs and iterate cycles under a budget",
+      "apply candidate patches and validate against tests before final output"
+    ],
+    "tooling": [
+      "finite-state-machine-guided tool availability",
+      "dynamic prompt memory across cycles",
+      "test-driven validation loop"
+    ],
+    "implementation_mode": "Python/SWE-bench port of the ICSE'25 paper's design with its MIT prompts adapted from Java; fault localization by SBFL over FORECAST's traces instead of perfect localization",
+    "evaluation_risk_mitigation": {
+      "test_information_leakage": "mitigated by emphasizing whole-suite validation and by reporting improvements beyond prior techniques, not only reproducing failing-test outcomes."
+    }
+  }
+}

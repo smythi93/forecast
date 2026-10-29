@@ -1,0 +1,34 @@
+{
+  "name": "mini-swe-agent",
+  "github": "https://github.com/SWE-agent/mini-swe-agent",
+  "doi": "10.48550/arXiv.2405.15793",
+  "open_source": true,
+  "license": "MIT License",
+  "downloaded_at": "2026-04-30",
+  "local": {
+    "repo_path": "agents/repos/mini-swe-agent",
+    "repo_commit": "a83fcae82d2a08f0ee0c688f9d137b3566c097f8",
+    "paper_pdf_path": "agents/papers/mini-swe-agent_10.48550_arXiv.2405.15793.pdf",
+    "pypi": "mini-swe-agent==2.4.6"
+  },
+  "paper": {
+    "doi_url": "https://doi.org/10.48550/arXiv.2405.15793",
+    "resolved_abs_url": "https://arxiv.org/abs/2405.15793",
+    "pdf_url": "https://arxiv.org/pdf/2405.15793.pdf"
+  },
+  "approach": {
+    "style": "minimal linear coding agent",
+    "phases": [
+      "prompt LM with issue and current transcript",
+      "execute returned bash command in isolated environment",
+      "append command output to transcript and iterate",
+      "stop when a patch candidate is produced and tests pass"
+    ],
+    "tooling": [
+      "bash-only action space",
+      "stateless command execution",
+      "linear message history"
+    ],
+    "implementation_mode": "upstream, run unmodified from PyPI mini-swe-agent==2.4.6 (benchmarks/swebench.yaml); FORECAST supplies issue text, model transport, and instance image"
+  }
+}

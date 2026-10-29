@@ -1,0 +1,35 @@
+{
+  "name": "acr",
+  "github": "https://github.com/AutoCodeRoverSG/auto-code-rover",
+  "doi": "10.1145/3650212.3680384",
+  "open_source": false,
+  "license": "SONAR Source-Available License v1.0",
+  "downloaded_at": "2026-04-30",
+  "local": {
+    "paper_pdf_path": "agents/papers/acr_10.48550_arXiv.2404.05427.pdf"
+  },
+  "paper": {
+    "doi_url": "https://doi.org/10.1145/3650212.3680384",
+    "doi_pdf_url": "https://dl.acm.org/doi/pdf/10.1145/3650212.3680384",
+    "doi_pdf_access": "restricted in automated download environment",
+    "open_preprint_doi": "10.48550/arXiv.2404.05427",
+    "open_preprint_url": "https://arxiv.org/abs/2404.05427",
+    "open_preprint_pdf_url": "https://arxiv.org/pdf/2404.05427.pdf"
+  },
+  "approach": {
+    "style": "autonomous program-improvement pipeline",
+    "phases": [
+      "program-structure-aware code search and context retrieval",
+      "fault-localization-guided narrowing when tests are available",
+      "patch generation from retrieved context",
+      "candidate selection and output patch"
+    ],
+    "tooling": [
+      "AST-aware retrieval",
+      "iterative search over repository structures",
+      "optional statistical fault localization"
+    ],
+    "implementation_mode": "complete re-implementation from the ISSTA'24 paper (stratified retrieval, SBFL-augmented, validated patch generation); upstream code not used",
+    "implementation_note": "No direct code copying from non-open-source components."
+  }
+}
