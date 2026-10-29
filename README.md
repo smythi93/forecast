@@ -319,7 +319,7 @@ Everything needed to reproduce the results is in this repository:
 | `evaluation/scripts/plot.py` | draws the paper's figures (diagnosis time, repair time) from `results.json` (needs matplotlib) |
 | `evaluation/results/` | `results.json` of the paper's runs, and the archive's `manifest.json` and `SHA256SUMS` |
 
-The runs themselves, about 50 GiB, are on Zenodo as one file,
+The runs themselves, about 54 GiB, are on Zenodo as one file,
 `forecast-results.tar.zst` (DOI: _to be added_).
 
 ## Analyzing the results
@@ -485,7 +485,7 @@ about three million tokens per run.
 ## The archive
 
 `forecast-results.tar.zst` holds this README, `results.json`, the diagnoses and every
-run. It is about 340 MB; extracted it takes about 50 GiB.
+run. It is about 320 MB; extracted it takes about 54 GiB.
 
 ```bash
 sha256sum -c SHA256SUMS                        # SHA256SUMS from evaluation/results/
