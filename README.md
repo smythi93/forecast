@@ -1,9 +1,10 @@
 # FORECAST
 
+[![PyPI](https://img.shields.io/pypi/v/forecast-repair.svg)](https://pypi.org/project/forecast-repair/)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
-[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/smythi93/forecast/blob/main/LICENSE)
 [![Benchmark: SWE-bench Lite](https://img.shields.io/badge/benchmark-SWE--bench%20Lite-orange.svg)](https://www.swebench.com/lite.html)
-[![Agents: 5](https://img.shields.io/badge/agents-5-brightgreen.svg)](agents)
+[![Agents: 5](https://img.shields.io/badge/agents-5-brightgreen.svg)](https://github.com/smythi93/forecast/tree/main/agents)
 
 FORECAST is a debugging approach that generates diagnoses to boost repair agents.
 
@@ -47,25 +48,28 @@ FORECAST needs Python 3.12 or newer, and Docker for SWE-bench instances and repa
 agents.
 
 ```bash
-git clone https://github.com/smythi93/forecast.git
-cd forecast
-pip install -e .                       # diagnoses only
-pip install -e ".[agents,evaluation]"  # plus repair agents and the SWE-bench harness
-python agents/install_upstream.py      # SWE-agent and Agentless at their pinned commits
+pip install forecast-repair                       # diagnoses only
+pip install "forecast-repair[agents,evaluation]"  # plus repair agents and the SWE-bench harness
 ```
 
 The optional extra `zstd` adds zstd as a codec for traces (gzip is the default).
+
+SWE-agent and Agentless run from checkouts at pinned commits, which the repository's
+`agents/install_upstream.py` installs. To use them, to run the quick start below, or to
+reproduce the evaluation, install from a clone instead:
+
+```bash
+git clone https://github.com/smythi93/forecast.git
+cd forecast
+pip install -e ".[agents,evaluation]"
+python agents/install_upstream.py      # SWE-agent and Agentless at their pinned commits
+```
 
 ## Quick start
 
 `resources/middle` holds a small program, `middle(x, y, z)`, which should return
 the middle of its three arguments, and six tests, one of which fails. The commands
 below run from the repository root.
-
-The `forecast` command runs the diagnosis steps. The repair steps (`prompt`, `run`
-and `evaluate`) also use the repository's `evaluation` package, which is not part of
-the installed package, so they run as `python -m forecast.cli <step>` from the
-repository root.
 
 ```bash
 T=tests.py::TestMiddle
@@ -84,7 +88,7 @@ forecast diagnose -s resources/middle -d $OUT -o $OUT
 cat $OUT/diagnosis.txt
 
 # 4. Build an agent's prompt with the diagnosis ($OUT/prompt.txt)
-python -m forecast.cli prompt -s resources/middle --agent mini-swe-agent --mode forecast \
+forecast prompt -s resources/middle --agent mini-swe-agent --mode forecast \
     --diagnosis $OUT/diagnosis.json --problem-statement "middle(2, 1, 3) returns 1, not 2." \
     -f $T::test_middle_213 -o $OUT -v
 ```
@@ -108,7 +112,7 @@ The following diagnosis shows the cause-effect chain leading to the test failure
 
 ## SWE-bench instances
 
-For SWE-bench Lite, the `evaluation` package runs the steps per instance. It
+For SWE-bench Lite, the repository's `evaluation` package runs the steps per instance. It
 collects the traces in the instance's SWE-bench Docker image, with the developer's
 test patch applied, from the instance's `FAIL_TO_PASS` and `PASS_TO_PASS` tests:
 
@@ -554,7 +558,7 @@ The rebuilt file is byte-identical to `results.json`.
 
 # License
 
-FORECAST is licensed under the Apache License 2.0; see [LICENSE](LICENSE).
+FORECAST is licensed under the Apache License 2.0; see [LICENSE](https://github.com/smythi93/forecast/blob/main/LICENSE).
 
 The repair agents FORECAST integrates are licensed as follows:
 
@@ -563,5 +567,5 @@ The repair agents FORECAST integrates are licensed as follows:
 | SWE-agent | MIT | cloned at a pinned commit by `agents/install_upstream.py`, not part of this repository |
 | mini-swe-agent | MIT | installed from PyPI as a pinned dependency |
 | Agentless | MIT | cloned at a pinned commit by `agents/install_upstream.py`, not part of this repository |
-| RepairAgent | MIT | ported to Python from its paper and prompts; its license, with the AutoGPT notice it carries, is in [`src/forecast/agents/repair_agent/LICENSE`](src/forecast/agents/repair_agent/LICENSE) |
+| RepairAgent | MIT | ported to Python from its paper and prompts; its license, with the AutoGPT notice it carries, is in [`src/forecast/agents/repair_agent/LICENSE`](https://github.com/smythi93/forecast/blob/main/src/forecast/agents/repair_agent/LICENSE) |
 | AutoCodeRover | Apache 2.0, as part of FORECAST | completely re-implemented from its paper; the original implementation is not used (see [Repair agents](#repair-agents)) |

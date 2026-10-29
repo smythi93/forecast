@@ -1,42 +1,63 @@
 [build-system]
 requires = [
-    "setuptools",
+    "setuptools>=77",
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "forecast"
+name = "forecast-repair"
 dynamic = ["version"]
 authors = [
     { name = "Marius Smytzek", email = "marius.smytzek@cispa.de" },
 ]
 description = "FORECAST is a debugging approach that generates diagnoses to boost repair agents."
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "Apache-2.0"
+license-files = [
+    "LICENSE",
+    "src/forecast/agents/repair_agent/LICENSE"
+]
 requires-python = ">=3.12, <4"
+keywords = [
+    "debugging",
+    "program repair",
+    "fault localization",
+    "diagnosis",
+    "LLM",
+    "agents",
+    "SWE-bench"
+]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Debugging",
     "Topic :: Software Development :: Testing",
-    "Topic :: Software Development :: Localization",
 ]
 dependencies = [
-    "sflkit>=0.5.5",
-    "sflkitlib",
+    "sflkit>=1.0.0",
+    "sflkitlib>=0.2.4",
     "tqdm>=4.67.3",
     "anthropic>=0.84.0",
     "openai>=2.24.0",
     "coverage>=7.13.4",
+    "pytest>=8.4.2",
     "docker>=7.1.0",
+    "pyyaml>=6.0",
+    "jinja2>=3.1",
 ]
 
 [project.urls]
 "Homepage" = "https://github.com/smythi93/forecast"
+"Repository" = "https://github.com/smythi93/forecast"
 "Bug Tracker" = "https://github.com/smythi93/forecast/issues"
 
 [tool.setuptools.dynamic]
@@ -87,12 +108,9 @@ evaluation = [
     "swebench>=4.1.0,<5"
 ]
 all = [
-    "pytest>=8.4.2",
-    "pytest-html>=4.1.1",
-    "tqdm>=4.67.1",
-    "swebench>=4.1.0,<5"
+    "forecast-repair[zstd,agents,test,evaluation]"
 ]
 
 [tool.black]
 line-length = 88
-target-version = ['py311']
+target-version = ['py312']

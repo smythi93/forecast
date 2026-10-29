@@ -263,7 +263,7 @@ def _handle_collect(args):
     swe_failing_tests: list[str] | None = None
     swe_passing_tests: list[str] | None = None
     if args.swe:
-        from evaluation import SWEBenchLoader
+        from forecast.experiment import SWEBenchLoader
 
         instances = SWEBenchLoader.load_instances(instance_ids=[args.src], dev=args.dev)
         if not instances:
@@ -479,7 +479,7 @@ def _handle_diagnose(args):
 def _handle_prompt(args):
     """Step 3 – Extract the agent prompt, optionally injecting the diagnosis."""
     from forecast.agents.base import RepairContext, AgentMode
-    from evaluation import LocalProjectLoader, SWEBenchLoader
+    from forecast.experiment import LocalProjectLoader, SWEBenchLoader
     from forecast.logger import get_logger
 
     log_dir = Path(args.log_dir) if args.log_dir else None
@@ -558,7 +558,7 @@ def _handle_run(args):
     """Step 4 – Run the repair agent (LLM call, save trajectory, extract patch)."""
     from forecast.agents.base import AgentMode, RepairContext
     from forecast.agents.models.utils import get_model_client
-    from evaluation import LocalProjectLoader, SWEBenchLoader
+    from forecast.experiment import LocalProjectLoader, SWEBenchLoader
     from forecast.integration import diagnosis_text_from_json, load_diagnosis_json
     from forecast.logger import get_logger
 
@@ -603,7 +603,7 @@ def _handle_run(args):
         context.diagnosis = diagnosis_text_from_json(raw)
         context.diagnosis_discriminability = raw.get("discriminability")
     elif mode == AgentMode.FORECAST:
-        from evaluation import ExperimentRunner
+        from forecast.experiment import ExperimentRunner
 
         runner = ExperimentRunner(output_dir=Path(args.output))
         diag = runner._generate_diagnosis(inst, Path(inst["repo"]))
@@ -668,7 +668,7 @@ def _handle_run(args):
 def _handle_evaluate(args):
     """Step 5 – Validate a patch against the test suite."""
     from forecast.agents.base import RepairContext
-    from evaluation import LocalProjectLoader, SWEBenchLoader
+    from forecast.experiment import LocalProjectLoader, SWEBenchLoader
     from forecast.logger import get_logger
 
     log_dir = Path(args.log_dir) if args.log_dir else None
@@ -771,7 +771,7 @@ def _checkout_swe(inst: dict, args, log) -> dict:
     :param log: Logger instance.
     :returns: Updated instance dict with local ``"repo"`` path.
     """
-    from evaluation import SWEBenchLoader
+    from forecast.experiment import SWEBenchLoader
 
     checkout_root = (
         Path(args.checkout_dir) if args.checkout_dir else Path(args.output) / "repos"
