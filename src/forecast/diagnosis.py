@@ -986,6 +986,8 @@ class Forecast:
         root: TracedRelevanceTree,
         min_discriminability_threshold: float = 0.6,
         max_chain_length: int = 10,
+        combine: bool = True,
+        divergences: bool = True,
     ):
         """
         Initialize the Forecast engine.
@@ -994,10 +996,17 @@ class Forecast:
         :param min_discriminability_threshold: MCC threshold below which
             diagnoses are discarded.  Defaults to 0.6.
         :param max_chain_length: Maximum chain length.  Defaults to 10.
+        :param combine: Whether atoms are combined into conjunctions and
+            disjunctions.  Defaults to ``True``; ``False`` keeps single
+            features only, e.g. for ablations.
+        :param divergences: Whether calls only failing runs make are reported
+            as divergences.  Defaults to ``True``.
         """
         self.root = root
         self.min_discriminability_threshold = min_discriminability_threshold
         self.max_chain_length = max_chain_length
+        self.combine = combine
+        self.divergences = divergences
 
     def derive_diagnosis(self) -> CauseChain:
         """
@@ -1334,7 +1343,9 @@ class Forecast:
                 )
                 causes.append(enter_diagnosis)
 
-            divergence = self._get_divergence(current, level=lvl)
+            divergence = (
+                self._get_divergence(current, level=lvl) if self.divergences else None
+            )
             if divergence:
                 causes.extend(divergence)
 
@@ -1589,7 +1600,7 @@ class Forecast:
             all_candidates.append(best_atom)
 
             # If not perfect discriminability, try combinations
-            if best_atom.discriminability < 1 - EPSILON:
+            if self.combine and best_atom.discriminability < 1 - EPSILON:
                 # Find possible combinations with other features
                 for candidate in feature_scores:
                     if (
@@ -1698,14 +1709,18 @@ class Forecast:
             return best_candidates[0]
         elif len(best_candidates) > 1:
             # Try to combine the best candidates to see if we can improve discriminability
-            combined = self._try_combine_diagnoses(
-                best_candidates,
-                failing_features,
-                passing_features,
-                total_failing,
-                total_passing,
-                level,
-                phase,
+            combined = (
+                self._try_combine_diagnoses(
+                    best_candidates,
+                    failing_features,
+                    passing_features,
+                    total_failing,
+                    total_passing,
+                    level,
+                    phase,
+                )
+                if self.combine
+                else None
             )
             # If combination improves discriminability, use it
             if combined and combined.discriminability > max_discriminability:

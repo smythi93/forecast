@@ -18,6 +18,7 @@ trivial to swap backends without touching agent code.
 
 import abc
 import logging
+import os
 import re
 import subprocess
 import sys
@@ -522,6 +523,14 @@ class RepairAgent(abc.ABC):
     #: weakly that presenting them as "the cause" would overstate them.
     WEAK_DISCRIMINABILITY = 0.1
 
+    #: Introduces the chain in the prompt. The environment variable
+    #: ``FORECAST_DIAGNOSIS_PREAMBLE`` replaces it, for ablations that inject
+    #: something other than a cause chain in its place.
+    PREAMBLE = (
+        "The following diagnosis shows the cause-effect chain leading to "
+        "the test failure:"
+    )
+
     @staticmethod
     def _discriminabilities(diagnosis: str) -> list[float]:
         """
@@ -605,11 +614,8 @@ class RepairAgent(abc.ABC):
             if weak
             else ""
         )
-        return (
-            "\n\n## Failure Diagnosis\n\n"
-            "The following diagnosis shows the cause-effect chain leading to "
-            f"the test failure:\n\n{diagnosis}{caveat}"
-        )
+        preamble = os.environ.get("FORECAST_DIAGNOSIS_PREAMBLE") or self.PREAMBLE
+        return f"\n\n## Failure Diagnosis\n\n{preamble}\n\n{diagnosis}{caveat}"
 
     def __repr__(self) -> str:
         return (

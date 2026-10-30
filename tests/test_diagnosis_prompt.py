@@ -1,4 +1,5 @@
 import unittest
+import unittest.mock
 
 from forecast.agents.base import AgentMode, RepairAgent, RepairContext
 from forecast.agents.mock_agent.mock_agent import MockRepairAgent
@@ -84,6 +85,22 @@ class EmptyDiagnosisIsEvidenceTests(unittest.TestCase):
         chain = "1. a (discriminability: 1.00)"
         out = self.forecast.diagnosis_block(_context(chain))
         self.assertTrue(out.endswith(chain))
+
+    def test_chain_is_introduced_as_a_cause_effect_chain(self):
+        out = self.forecast.diagnosis_block(_context("1. a (discriminability: 1.00)"))
+        self.assertIn(
+            "The following diagnosis shows the cause-effect chain leading to "
+            "the test failure:\n\n1. a",
+            out,
+        )
+
+    def test_the_environment_can_replace_the_introduction(self):
+        with unittest.mock.patch.dict(
+            "os.environ", {"FORECAST_DIAGNOSIS_PREAMBLE": "Suspicious methods:"}
+        ):
+            out = self.forecast.diagnosis_block(_context("1. m (suspiciousness 0.9)"))
+        self.assertIn("## Failure Diagnosis\n\nSuspicious methods:\n\n1. m", out)
+        self.assertNotIn("cause-effect", out)
 
     def test_scores_are_parsed_from_the_rendered_chain(self):
         self.assertEqual(
