@@ -15,10 +15,14 @@ Variants made from the stored diagnoses (<runs dir> holds the evaluated ones):
   testinfo   the failing tests and their output on the unchanged code
              (--failures, written by failures.py)
   wording    the same chain, introduced and joined in neutral terms
-  nodiv      the same chain without its divergences
-  atoms      the same chain, each conjunction or disjunction replaced by its strongest atom
 
-Variants recomputed from the traced relevance trees (--trees, the work dir of
+Variants recomputed from the traced relevance trees, for the instances whose evaluated
+chain has what the variant takes away; the others keep their evaluated diagnosis. The
+chains come from recompute.py, run where the trees are (--recomputed, its out dir):
+  nodiv      without divergences, for the chains with a divergence
+  atoms      without conjunctions and disjunctions, for the chains with one
+
+Variants recomputed from the traced relevance trees here (--trees, the work dir of
 evaluation/scripts/diagnose.sh, with <trees>/<id>/diagnosis/tree.pkl):
   recomputed the default chain, to check that the trees reproduce the stored chains
   k<N>       at most N causes instead of 10, e.g. k5, k20
@@ -34,7 +38,8 @@ where no diagnosis is left to inject, as in the evaluated baseline run. foreign 
 writes donors.json.
 
 Usage: python evaluation/revision/variants.py <variant> <runs dir> <out dir>
-           [--model qwen] [--trees DIR] [--repos DIR] [--failures FILE] [--seed 0]
+           [--model qwen] [--trees DIR] [--repos DIR] [--recomputed DIR] [--failures FILE]
+           [--seed 0]
 """
 import argparse
 import json
@@ -121,36 +126,18 @@ def locations(data):
     return SEPARATOR.join(lines)
 
 
-def chain_of(causes):
-    """Render *causes* as a stored chain renders them."""
-    return SEPARATOR.join(
-        f"{k}. {_cause_text(c)}{score(c)}" for k, c in enumerate(causes, start=1)
-    )
+#: The cause types a recomputed variant takes away.
+REMOVES = {"nodiv": {"divergence"}, "atoms": {"conjunction", "disjunction"}}
 
 
-def nodiv(data):
-    """The chain without its divergences; ``None`` (no block) if nothing else is left."""
-    causes = data.get("causes", [])
-    kept = [c for c in causes if c.get("type") != "divergence"]
-    if len(kept) == len(causes):
+def recomputed(variant, i, data, folder):
+    """The chain recompute.py derived for *i* if the evaluated one has what *variant* removes."""
+    if not REMOVES[variant] & {c.get("type") for c in data.get("causes", [])}:
         return data
-    return text_of(chain_of(kept)) if kept else text_of(None)
-
-
-def atoms(data):
-    """The chain with each compound cause replaced by its strongest atom, without repeats."""
-    causes = data.get("causes", [])
-    if not any(c.get("atoms") for c in causes):
-        return data
-    kept, seen = [], set()
-    for cause in causes:
-        if cause.get("atoms"):
-            cause = max(cause["atoms"], key=lambda a: a.get("discriminability") or 0)
-        text = _cause_text(cause)
-        if text not in seen:
-            seen.add(text)
-            kept.append(cause)
-    return text_of(chain_of(kept))
+    path = folder / variant / i / "diagnosis.json"
+    if not path.exists():
+        sys.exit(f"{variant}: no recomputed diagnosis for {i} in {folder}")
+    return json.loads(path.read_text())
 
 
 def sbfl(path, top=10):
@@ -205,6 +192,7 @@ def main():
     parser.add_argument("--trees", type=Path)
     parser.add_argument("--repos", type=Path, help="checkouts, default <trees>/repos")
     parser.add_argument("--failures", type=Path)
+    parser.add_argument("--recomputed", type=Path, help="out dir of recompute.py")
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
 
@@ -216,6 +204,8 @@ def main():
     options = options_of(args.variant)
     if options is not None and not args.trees:
         sys.exit(f"{args.variant} is recomputed from the trees: pass --trees")
+    if args.variant in REMOVES and not args.recomputed:
+        sys.exit(f"{args.variant} takes the chains of recompute.py: pass --recomputed")
     if args.variant == "testinfo" and not args.failures:
         sys.exit("testinfo needs --failures (see failures.py)")
     failures = json.loads(args.failures.read_text()) if args.failures else {}
@@ -237,10 +227,8 @@ def main():
             new = text_of(sbfl(args.runs / args.model / i / "diagnosis" / "sbfl.json"))
         elif args.variant == "testinfo":
             new = text_of(testinfo(failures.get(i)))
-        elif args.variant == "nodiv":
-            new = nodiv(data)
-        elif args.variant == "atoms":
-            new = atoms(data)
+        elif args.variant in REMOVES:
+            new = recomputed(args.variant, i, data, args.recomputed)
         elif args.variant == "wording":
             new = text_of(diagnosis_text_from_json(data).replace(SEPARATOR, "\n THEN \n"))
         elif options is not None:
