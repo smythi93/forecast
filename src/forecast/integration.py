@@ -59,6 +59,9 @@ class DiagnosisSerializer:
                 "type": "conjunction",
                 "discriminability": diagnosis.discriminability,
                 "level": diagnosis.level,
+                # The flat atoms lose the grouping of combined compound
+                # diagnoses, so the text keeps it.
+                "text": diagnosis.to_text(),
                 "atoms": [
                     DiagnosisSerializer.to_json(atom) for atom in diagnosis.atoms
                 ],
@@ -68,6 +71,9 @@ class DiagnosisSerializer:
                 "type": "disjunction",
                 "discriminability": diagnosis.discriminability,
                 "level": diagnosis.level,
+                # The flat atoms lose the grouping of combined compound
+                # diagnoses, so the text keeps it.
+                "text": diagnosis.to_text(),
                 "atoms": [
                     DiagnosisSerializer.to_json(atom) for atom in diagnosis.atoms
                 ],

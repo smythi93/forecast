@@ -823,14 +823,44 @@ class Divergence(Diagnosis):
         return head if head and function_id.isdigit() else name
 
 
+def _join(parts: list[Diagnosis], operator: str, render) -> str:
+    """
+    Join *parts* with *operator*, parenthesizing every part that is a compound
+    diagnosis of the other operator.
+
+    Without the parentheses, ``(A AND B) OR C`` would read as
+    ``A AND B OR C``, a different formula than the one that was scored.
+
+    :param parts: The diagnoses to join.
+    :param operator: ``"AND"`` or ``"OR"``.
+    :param render: Renders a single part, e.g. ``str`` or its ``to_text``.
+    :returns: The joined text.
+    """
+    rendered = []
+    for part in parts:
+        text = render(part)
+        if (
+            isinstance(part, (Conjunction, Disjunction))
+            and part.OPERATOR != operator
+            and len(part.parts) > 1
+        ):
+            text = f"({text})"
+        rendered.append(text)
+    return f" {operator} ".join(rendered)
+
+
 class Conjunction(Diagnosis):
     """
     A conjunction (AND) of :class:`Atom` nodes.
 
     All atoms must hold simultaneously for the conjunction to be satisfied.
 
-    :ivar atoms: The conjuncts.
+    :ivar atoms: The conjuncts, flattened to atoms.
+    :ivar parts: The diagnoses the conjunction joins, which keep their own
+        operators; the atoms themselves unless compound diagnoses are joined.
     """
+
+    OPERATOR = "AND"
 
     def __init__(
         self,
@@ -838,6 +868,7 @@ class Conjunction(Diagnosis):
         discriminability: float = 0.0,
         level: int = 0,
         point: EntryPoint = None,
+        parts: Optional[list[Diagnosis]] = None,
     ):
         """
         Initialize the conjunction.
@@ -847,15 +878,18 @@ class Conjunction(Diagnosis):
         :param level: Call-tree depth.  Defaults to 0.
         :param point: Observation point.  Defaults to
             ``None``.
+        :param parts: The joined diagnoses, when they are compound.
+            Defaults to *atoms*.
         """
         super().__init__(discriminability, level, point)
         self.atoms = atoms
+        self.parts = parts or list(atoms)
 
     def __repr__(self):
         return f"DiagnosisConjunction(atoms={self.atoms})"
 
     def __str__(self):
-        return " AND ".join(str(atom) for atom in self.atoms)
+        return _join(self.parts, self.OPERATOR, str)
 
     def get_features(self) -> set[Feature]:
         """Return the set of features from all conjunct atoms."""
@@ -863,11 +897,11 @@ class Conjunction(Diagnosis):
 
     def to_text(self) -> str:
         """
-        Render each atom and join with ``AND``.
+        Render each part and join with ``AND``.
 
         :returns: Natural-language conjunction.
         """
-        return " AND ".join(atom.to_text() for atom in self.atoms)
+        return _join(self.parts, self.OPERATOR, lambda part: part.to_text())
 
 
 class Disjunction(Diagnosis):
@@ -876,8 +910,12 @@ class Disjunction(Diagnosis):
 
     At least one atom must hold for the disjunction to be satisfied.
 
-    :ivar atoms: The disjuncts.
+    :ivar atoms: The disjuncts, flattened to atoms.
+    :ivar parts: The diagnoses the disjunction joins, which keep their own
+        operators; the atoms themselves unless compound diagnoses are joined.
     """
+
+    OPERATOR = "OR"
 
     def __init__(
         self,
@@ -885,6 +923,7 @@ class Disjunction(Diagnosis):
         discriminability: float = 0.0,
         level: int = 0,
         point: EntryPoint = None,
+        parts: Optional[list[Diagnosis]] = None,
     ):
         """
         Initialize the disjunction.
@@ -894,15 +933,18 @@ class Disjunction(Diagnosis):
         :param level: Call-tree depth.  Defaults to 0.
         :param point: Observation point.  Defaults to
             ``None``.
+        :param parts: The joined diagnoses, when they are compound.
+            Defaults to *atoms*.
         """
         super().__init__(discriminability, level, point)
         self.atoms = atoms
+        self.parts = parts or list(atoms)
 
     def __repr__(self):
         return f"DiagnosisDisjunction(atoms={self.atoms})"
 
     def __str__(self):
-        return " OR ".join(str(atom) for atom in self.atoms)
+        return _join(self.parts, self.OPERATOR, str)
 
     def get_features(self) -> set[Feature]:
         """Return the set of features from all disjunct atoms."""
@@ -910,11 +952,11 @@ class Disjunction(Diagnosis):
 
     def to_text(self) -> str:
         """
-        Render each atom and join with ``OR``.
+        Render each part and join with ``OR``.
 
         :returns: Natural-language disjunction.
         """
-        return " OR ".join(atom.to_text() for atom in self.atoms)
+        return _join(self.parts, self.OPERATOR, lambda part: part.to_text())
 
 
 class Forecast:
@@ -1768,6 +1810,7 @@ class Forecast:
                         discriminability=and_discriminability,
                         level=level,
                         point=phase,
+                        parts=[diag1, diag2],
                     )
                     LOGGER.debug(
                         f"Multi-candidate AND combination improves: "
@@ -1796,6 +1839,7 @@ class Forecast:
                         discriminability=or_discriminability,
                         level=level,
                         point=phase,
+                        parts=[diag1, diag2],
                     )
                     LOGGER.debug(
                         f"Multi-candidate OR combination improves: "
@@ -1841,6 +1885,23 @@ class Forecast:
             run IDs in which *diagnosis* holds, or ``None`` if the sets cannot
             be computed (unknown diagnosis type or empty atom list).
         """
+        # A combination of compound diagnoses holds where its parts hold
+        # together (AND) or alone (OR), which its flattened atoms do not say.
+        if isinstance(diagnosis, (Conjunction, Disjunction)) and any(
+            isinstance(part, (Conjunction, Disjunction)) for part in diagnosis.parts
+        ):
+            part_vectors = [
+                self._get_diagnosis_vectors(part, failing_features, passing_features)
+                for part in diagnosis.parts
+            ]
+            if any(vectors is None for vectors in part_vectors):
+                return None
+            combine = set.intersection if isinstance(diagnosis, Conjunction) else set.union
+            return (
+                combine(*(failing for failing, _ in part_vectors)),
+                combine(*(passing for _, passing in part_vectors)),
+            )
+
         atoms = self._get_atoms_from_diagnosis(diagnosis)
         if not atoms:
             return None

@@ -6,13 +6,14 @@ from pathlib import Path
 from sflkit.analysis.analysis_type import MetaEvent
 from sflkit.analysis.predicate import Comp, ReturnPredicate
 from sflkit.analysis.spectra import Line
-from sflkit.features.value import BinaryFeature
+from sflkit.features.value import BinaryFeature, FeatureValue
 from sflkitlib.events.event import LineEvent
 
 from forecast.diagnosis import (
     Atom,
     CauseChain,
     Conjunction,
+    Disjunction,
     Divergence,
     Forecast,
     FunctionNames,
@@ -214,6 +215,65 @@ class SerializationTests(unittest.TestCase):
     def test_diagnosis_without_causes_yields_empty_text(self):
         # The diagnosis ran and kept nothing: a finding, not an absence.
         self.assertEqual("", diagnosis_text_from_json({"type": "cause_chain", "causes": []}))
+
+
+class CombinedDiagnosisTests(unittest.TestCase):
+    @staticmethod
+    def mixed() -> Conjunction:
+        """``(A AND B) AND (C OR D)``, as the multi-candidate step combines it."""
+        a, b, c, d = atom(1, 0.8), atom(2, 0.8), atom(3, 0.8), atom(4, 0.8)
+        left = Conjunction([a, b], discriminability=0.8)
+        right = Disjunction([c, d], discriminability=0.8)
+        return Conjunction([a, b, c, d], discriminability=1.0, parts=[left, right])
+
+    def test_a_combination_of_mixed_operators_keeps_its_grouping(self):
+        self.assertEqual(
+            "Line app.py:1 is executed AND Line app.py:2 is executed AND "
+            "(Line app.py:3 is executed OR Line app.py:4 is executed)",
+            self.mixed().to_text(),
+        )
+
+    def test_a_disjunction_of_conjunctions_groups_them(self):
+        a, b, c = atom(1, 0.8), atom(2, 0.8), atom(3, 0.8)
+        combined = Disjunction(
+            [a, b, c], parts=[Conjunction([a, b]), c]
+        )
+        self.assertEqual(
+            "(Line app.py:1 is executed AND Line app.py:2 is executed) OR "
+            "Line app.py:3 is executed",
+            combined.to_text(),
+        )
+
+    def test_plain_combinations_render_as_before(self):
+        self.assertEqual(
+            "Line app.py:1 is executed OR Line app.py:2 is executed",
+            Disjunction([atom(1, 0.8), atom(2, 0.8)]).to_text(),
+        )
+
+    def test_the_serialized_cause_carries_the_grouped_text(self):
+        chain = CauseChain([self.mixed()])
+        data = DiagnosisSerializer.to_json(chain)
+        legacy = {k: v for k, v in data.items() if k != "text"}
+
+        self.assertIn("(Line app.py:3 is executed OR", diagnosis_text_from_json(legacy))
+
+    def test_the_vectors_of_a_combination_follow_its_grouping(self):
+        a, b, c, d = (atom(line, 0.8).feature for line in (1, 2, 3, 4))
+        failing = {
+            a: {"vectors": {FeatureValue.TRUE: {1, 2}}},
+            b: {"vectors": {FeatureValue.TRUE: {1, 2}}},
+            c: {"vectors": {FeatureValue.TRUE: {1}}},
+            d: {"vectors": {FeatureValue.TRUE: {2}}},
+        }
+        passing = {a: {"vectors": {FeatureValue.TRUE: {3}}}}
+        forecast = Forecast.__new__(Forecast)
+
+        # A AND B AND (C OR D) holds in both failing runs; flattened to
+        # A AND B AND C AND D, it would hold in neither.
+        self.assertEqual(
+            ({1, 2}, set()),
+            forecast._get_diagnosis_vectors(self.mixed(), failing, passing),
+        )
 
 
 class MccTests(unittest.TestCase):
