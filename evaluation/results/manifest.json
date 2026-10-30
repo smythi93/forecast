@@ -67,8 +67,8 @@
  },
  "haiku-baseline-agentless": {
   "files": 190853,
-  "raw_bytes": 2955890263,
-  "tar_bytes": 3297888256,
+  "raw_bytes": 2955897307,
+  "tar_bytes": 3297892352,
   "rewritten": 0,
   "forbidden_hits": {
    "$ANTHROPIC_API_KEY": 0,
@@ -78,8 +78,8 @@
  },
  "haiku-forecast-mini-swe-agent": {
   "files": 2394,
-  "raw_bytes": 986234363,
-  "tar_bytes": 989705728,
+  "raw_bytes": 986246956,
+  "tar_bytes": 989715968,
   "rewritten": 0,
   "forbidden_hits": {
    "$ANTHROPIC_API_KEY": 0,
