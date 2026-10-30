@@ -1,8 +1,9 @@
 """Record what the failing tests of each instance print on the unchanged code.
 
 For the testinfo variant (variants.py), this runs the SWE-bench harness on the empty
-patch, in the instance's image and with the developer's test patch, exactly as a patch is
-evaluated, and keeps for every instance the FAIL_TO_PASS tests and the part of the test
+patch, in the instance's image and with the developer's test patch, as a patch is
+evaluated, except that pytest prints short tracebacks where the harness turns them off
+(astropy runs with --tb=no). It keeps for every instance the FAIL_TO_PASS tests and the part of the test
 output that reports their failure: pytest's FAILURES and ERRORS sections, and the FAIL and
 ERROR blocks of Django's and SymPy's runners. Everything else, such as the setup commands
 the harness logs, is cut, and an instance whose output shows no failure keeps the tail of
@@ -50,8 +51,24 @@ def failure_output(log):
     return (report[: end.start()] if end else report).strip(), True
 
 
+def with_tracebacks(make_spec):
+    """
+    *make_spec*, but with pytest's tracebacks turned on: the harness runs some
+    projects (astropy) with ``--tb=no``, which prints that a test failed but not
+    why. Which tests run, and how, stays the same.
+    """
+    def spec(task_info):
+        result = make_spec(task_info)
+        result.eval_script_list = [c.replace("--tb=no", "--tb=short") for c in result.eval_script_list]
+        return result
+    return spec
+
+
 def run(task_info, logs):
+    import forecast.agents.environment as environment
     from forecast.agents.environment import harness_evaluate
+
+    environment.test_spec = with_tracebacks(environment.test_spec)
 
     instance_id = task_info["instance_id"]
     verdict = harness_evaluate(

@@ -12,6 +12,7 @@
 #
 # MIRRORS (optional): a folder made by mirrors.sh; git then clones from there instead of
 # GitHub, which Agentless needs with many workers.
+# IDS (optional): a file with the instance ids to run instead of all 300.
 # Usage: bash evaluation/scripts/run_agent.sh <runs dir> <haiku|qwen> <agent> <baseline|forecast> [workers, default 10]
 set -e
 R=${1:?usage: run_agent.sh <runs dir> <haiku|qwen> <agent> <baseline|forecast> [workers]}
@@ -36,12 +37,12 @@ case $m in
     export LITELLM_PROXY_CANONICAL_MODEL=claude-haiku-4-5-20251001
     exec python -m evaluation.parallel_repair --agent "$a" --mode "$mode" \
       --model proxy/anthropic/claude-haiku-4-5-20251001 \
-      --instance-ids-file "$here/instances.txt" --output-dir "$R/haiku" --workers "$workers" ;;
+      --instance-ids-file "${IDS:-$here/instances.txt}" --output-dir "$R/haiku" --workers "$workers" ;;
   qwen)
     export FORECAST_PRICE_AS=claude-haiku-4-5-20251001
     exec python -m evaluation.parallel_repair --agent "$a" --mode "$mode" \
       --model ollama/qwen3.5:27b --ollama-endpoints "${OLLAMA_ENDPOINTS:-http://127.0.0.1:11434}" \
-      --instance-ids-file "$here/instances.txt" --output-dir "$R/qwen" --workers "$workers" ;;
+      --instance-ids-file "${IDS:-$here/instances.txt}" --output-dir "$R/qwen" --workers "$workers" ;;
   *)
     echo "unknown model $m (haiku or qwen)" >&2; exit 2 ;;
 esac

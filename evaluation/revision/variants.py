@@ -15,18 +15,23 @@ Variants made from the stored diagnoses (<runs dir> holds the evaluated ones):
   testinfo   the failing tests and their output on the unchanged code
              (--failures, written by failures.py)
   wording    the same chain, introduced and joined in neutral terms
+  nodiv      the same chain without its divergences
+  atoms      the same chain, each conjunction or disjunction replaced by its strongest atom
 
 Variants recomputed from the traced relevance trees (--trees, the work dir of
 evaluation/scripts/diagnose.sh, with <trees>/<id>/diagnosis/tree.pkl):
   recomputed the default chain, to check that the trees reproduce the stored chains
-  atoms      without conjunctions and disjunctions
-  nodiv      without divergences
   k<N>       at most N causes instead of 10, e.g. k5, k20
   t<X>       discriminability threshold X instead of 0.6, e.g. t0.4, t0.8
 
 Variants that inject something other than a cause chain also write preamble.txt, the
 sentence that introduces the block; run_variant.sh passes it to the agents. Every out
-dir gets variant.json, which records how it was made, and foreign writes donors.json.
+dir gets variant.json, which records how it was made, and changed.txt, the instances
+whose prompt differs from both evaluated runs. Only those need a run: run_variant.sh
+runs them alone, and compare.py takes the evaluated outcome for the others, whose prompt
+is the same as in the evaluated FORECAST run, or, for the instances in as_baseline.txt,
+where no diagnosis is left to inject, as in the evaluated baseline run. foreign also
+writes donors.json.
 
 Usage: python evaluation/revision/variants.py <variant> <runs dir> <out dir>
            [--model qwen] [--trees DIR] [--repos DIR] [--failures FILE] [--seed 0]
@@ -116,6 +121,38 @@ def locations(data):
     return SEPARATOR.join(lines)
 
 
+def chain_of(causes):
+    """Render *causes* as a stored chain renders them."""
+    return SEPARATOR.join(
+        f"{k}. {_cause_text(c)}{score(c)}" for k, c in enumerate(causes, start=1)
+    )
+
+
+def nodiv(data):
+    """The chain without its divergences; ``None`` (no block) if nothing else is left."""
+    causes = data.get("causes", [])
+    kept = [c for c in causes if c.get("type") != "divergence"]
+    if len(kept) == len(causes):
+        return data
+    return text_of(chain_of(kept)) if kept else text_of(None)
+
+
+def atoms(data):
+    """The chain with each compound cause replaced by its strongest atom, without repeats."""
+    causes = data.get("causes", [])
+    if not any(c.get("atoms") for c in causes):
+        return data
+    kept, seen = [], set()
+    for cause in causes:
+        if cause.get("atoms"):
+            cause = max(cause["atoms"], key=lambda a: a.get("discriminability") or 0)
+        text = _cause_text(cause)
+        if text not in seen:
+            seen.add(text)
+            kept.append(cause)
+    return text_of(chain_of(kept))
+
+
 def sbfl(path, top=10):
     if not path.exists():
         return None
@@ -152,10 +189,6 @@ def recompute(i, trees, repos, **options):
 def options_of(variant):
     if variant == "recomputed":
         return {}
-    if variant == "atoms":
-        return {"combine": False}
-    if variant == "nodiv":
-        return {"divergences": False}
     if m := re.fullmatch(r"k(\d+)", variant):
         return {"max_chain_length": int(m.group(1))}
     if m := re.fullmatch(r"t(0?\.\d+)", variant):
@@ -188,7 +221,7 @@ def main():
     failures = json.loads(args.failures.read_text()) if args.failures else {}
     donors = foreign(ids, diagnoses) if args.variant == "foreign" else {}
 
-    same, empty = 0, []
+    same, empty, changed = 0, [], []
     for i in ids:
         data = diagnoses[i]
         if args.variant == "full":
@@ -204,6 +237,10 @@ def main():
             new = text_of(sbfl(args.runs / args.model / i / "diagnosis" / "sbfl.json"))
         elif args.variant == "testinfo":
             new = text_of(testinfo(failures.get(i)))
+        elif args.variant == "nodiv":
+            new = nodiv(data)
+        elif args.variant == "atoms":
+            new = atoms(data)
         elif args.variant == "wording":
             new = text_of(diagnosis_text_from_json(data).replace(SEPARATOR, "\n THEN \n"))
         elif options is not None:
@@ -213,6 +250,8 @@ def main():
             sys.exit(f"unknown variant {args.variant}")
         if new.get("type") == "none":
             empty.append(i)
+        elif args.variant in PREAMBLES or diagnosis_text_from_json(new) != diagnosis_text_from_json(data):
+            changed.append(i)
 
         source, target = args.runs / args.model / i / "diagnosis", args.out / args.model / i / "diagnosis"
         target.mkdir(parents=True, exist_ok=True)
@@ -225,13 +264,17 @@ def main():
         (args.out / "preamble.txt").write_text(PREAMBLES[args.variant])
     if donors:
         (args.out / "donors.json").write_text(json.dumps(donors, indent=2))
+    (args.out / "changed.txt").write_text("".join(f"{i}\n" for i in changed))
+    (args.out / "as_baseline.txt").write_text("".join(f"{i}\n" for i in empty))
     (args.out / "variant.json").write_text(json.dumps(
         {"variant": args.variant, "model": args.model, "source": str(args.runs.resolve()),
          "seed": args.seed, "options": options, "preamble": PREAMBLES.get(args.variant),
          "without_text": empty}, indent=2))
-    print(f"{args.variant}: {len(ids)} diagnoses in {args.out / args.model}")
+    print(f"{args.variant}: {len(ids)} diagnoses in {args.out / args.model}, "
+          f"{len(changed)} to run (changed.txt)")
     if empty:
-        print(f"  {len(empty)} without a block (issue left unchanged), e.g. {empty[:3]}")
+        print(f"  {len(empty)} without a block, prompted as in the baseline (as_baseline.txt),"
+              f" e.g. {empty[:3]}")
     if options is not None:
         print(f"  {same}/{len(ids)} texts identical to the stored chains")
 

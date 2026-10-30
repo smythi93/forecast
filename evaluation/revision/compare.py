@@ -4,7 +4,11 @@ Reads the verdicts of <dir>/<model>/<id>/evaluate/<agent>/<mode>/result.json and
 them, instance by instance, with the evaluated runs in results.json (the paper's numbers).
 Only instances whose run has finished in <dir> are compared, on both sides, so the numbers
 are meaningful while a run is still going; a run without a verdict counts as unresolved,
-as in the paper. For each mode found in <dir>, it prints a Markdown row: finished runs,
+as in the paper. Where variants.py found that only some instances get a different prompt
+(changed.txt), the others take the evaluated outcome of the run whose prompt they share:
+the FORECAST run, or the baseline run for those in as_baseline.txt. The row then covers
+all 300 instances once the changed ones have finished, and a second row gives the
+changed ones alone. For each mode found in <dir>, it prints a Markdown row: finished runs,
 resolved runs, and the paired difference to the evaluated baseline and FORECAST mode
 (change in resolved runs, gained / lost instances, exact McNemar p). A folder with both
 modes (repeat.sh) also gets the gain of its own FORECAST over its own baseline.
@@ -66,6 +70,16 @@ def main():
     label = args.label or args.dir.name
     runs = {mode: verdicts(args.dir, args.model, args.agent, mode, ids)
             for mode in ("baseline", "forecast")}
+    changed_only = None
+    if (args.dir / "changed.txt").exists() and runs["forecast"]:
+        changed = set((args.dir / "changed.txt").read_text().split())
+        as_baseline = set((args.dir / "as_baseline.txt").read_text().split()) \
+            if (args.dir / "as_baseline.txt").exists() else set()
+        changed_only = {i: r for i, r in runs["forecast"].items() if i in changed}
+        reused = {i: evaluated["baseline" if i in as_baseline else "forecast"][i]
+                  for i in ids if i not in changed}
+        if len(changed_only) == len(changed):
+            runs["forecast"] = {**changed_only, **reused}
 
     print(f"| {args.model} {args.agent} | finished | resolved | vs. evaluated baseline"
           " | vs. evaluated FORECAST | own gain |")
@@ -78,6 +92,12 @@ def main():
         print(f"| {label} ({mode}) | {len(mine)}/{len(ids)} | {resolved}"
               f" ({100 * resolved / len(mine):.1f}%) | {versus(mine, evaluated['baseline'])}"
               f" | {versus(mine, evaluated['forecast'])} | {own} |")
+    if changed_only:
+        resolved = sum(changed_only.values())
+        print(f"| {label} (changed only) | {len(changed_only)}/{len(changed)} | {resolved}"
+              f" ({100 * resolved / len(changed_only):.1f}%)"
+              f" | {versus(changed_only, evaluated['baseline'])}"
+              f" | {versus(changed_only, evaluated['forecast'])} | |")
     if not any(runs.values()):
         print(f"no finished {args.agent} runs in {args.dir / args.model}")
     for mode, ref in evaluated.items():
