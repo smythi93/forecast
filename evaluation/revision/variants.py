@@ -31,11 +31,12 @@ evaluation/scripts/diagnose.sh, with <trees>/<id>/diagnosis/tree.pkl):
 Variants that inject something other than a cause chain also write preamble.txt, the
 sentence that introduces the block; run_variant.sh passes it to the agents. Every out
 dir gets variant.json, which records how it was made, and changed.txt, the instances
-whose prompt differs from both evaluated runs. Only those need a run: run_variant.sh
-runs them alone, and compare.py takes the evaluated outcome for the others, whose prompt
-is the same as in the evaluated FORECAST run, or, for the instances in as_baseline.txt,
-where no diagnosis is left to inject, as in the evaluated baseline run. foreign also
-writes donors.json.
+to run: every instance with a diagnosis block, an empty chain included, and for nodiv,
+atoms and the variants recomputed here, only those whose chain the variant changes.
+run_variant.sh runs them alone, and compare.py takes the evaluated outcome for the
+others, whose prompt is the same as in the evaluated FORECAST run, or, for the instances
+in as_baseline.txt, where no diagnosis is left to inject, as in the evaluated baseline
+run. foreign also writes donors.json.
 
 Usage: python evaluation/revision/variants.py <variant> <runs dir> <out dir>
            [--model qwen] [--trees DIR] [--repos DIR] [--recomputed DIR] [--failures FILE]
@@ -238,7 +239,8 @@ def main():
             sys.exit(f"unknown variant {args.variant}")
         if new.get("type") == "none":
             empty.append(i)
-        elif args.variant in PREAMBLES or diagnosis_text_from_json(new) != diagnosis_text_from_json(data):
+        elif (args.variant not in REMOVES and options is None
+              or diagnosis_text_from_json(new) != diagnosis_text_from_json(data)):
             changed.append(i)
 
         source, target = args.runs / args.model / i / "diagnosis", args.out / args.model / i / "diagnosis"
