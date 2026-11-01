@@ -14,6 +14,7 @@ Variants made from the stored diagnoses (<runs dir> holds the evaluated ones):
   sbfl       the ten methods spectrum-based fault localization ranks highest
   testinfo   the failing tests and their output on the unchanged code
              (--failures, written by failures.py)
+  withtests  the evaluated chain, followed by the testinfo block (--failures)
   wording    the same chain, introduced and joined in neutral terms
 
 Variants recomputed from the traced relevance trees, for the instances whose evaluated
@@ -69,6 +70,10 @@ PREAMBLES = {
 }
 #: Characters of test output kept per instance, about the size of a long chain.
 TESTINFO_CHARS = 4000
+#: Stands in for an empty chain in withtests, where the agent's own wording for it
+#: does not apply because the block is not empty.
+EMPTY_CHAIN = ("FORECAST found no execution feature that separates the failing run from "
+               "the passing ones.")
 
 
 def score(cause):
@@ -161,6 +166,13 @@ def testinfo(entry):
     return f"Failing tests:\n{tests}\n\nOutput:\n```\n{output}\n```"
 
 
+def withtests(data, entry):
+    """The evaluated chain, then the failing tests and their output under testinfo's preamble."""
+    chain = diagnosis_text_from_json(data) or EMPTY_CHAIN
+    tests = testinfo(entry)
+    return f"{chain}\n\n{PREAMBLES['testinfo']}\n\n{tests}" if tests else chain
+
+
 def recompute(i, trees, repos, **options):
     from forecast.diagnosis import Forecast, FunctionNames
     from forecast.integration import DiagnosisSerializer
@@ -207,8 +219,8 @@ def main():
         sys.exit(f"{args.variant} is recomputed from the trees: pass --trees")
     if args.variant in REMOVES and not args.recomputed:
         sys.exit(f"{args.variant} takes the chains of recompute.py: pass --recomputed")
-    if args.variant == "testinfo" and not args.failures:
-        sys.exit("testinfo needs --failures (see failures.py)")
+    if args.variant in ("testinfo", "withtests") and not args.failures:
+        sys.exit(f"{args.variant} needs --failures (see failures.py)")
     failures = json.loads(args.failures.read_text()) if args.failures else {}
     donors = foreign(ids, diagnoses) if args.variant == "foreign" else {}
 
@@ -228,6 +240,9 @@ def main():
             new = text_of(sbfl(args.runs / args.model / i / "diagnosis" / "sbfl.json"))
         elif args.variant == "testinfo":
             new = text_of(testinfo(failures.get(i)))
+        elif args.variant == "withtests":
+            new = text_of(withtests(data, failures.get(i)))
+            new["discriminability"] = data.get("discriminability")
         elif args.variant in REMOVES:
             new = recomputed(args.variant, i, data, args.recomputed)
         elif args.variant == "wording":
