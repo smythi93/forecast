@@ -14,11 +14,11 @@ Everything reads results.json and the diagnoses of the results archive (<archive
 diagnoses/<id>/diagnosis.json, and <archive>/<model>/<mode>/<id>/run/<agent>/<mode>/
 patch.diff for sample); leakage and sample also read SWE-bench Lite (from the `datasets`
 cache when offline). lengths needs the traced relevance trees (--trees, the work dir of
-evaluation/scripts/diagnose.sh). Output that is meant to be read goes to --out, as
+evaluation/scripts/diagnose.sh), or what recompute.py --lengths wrote (--recomputed). Output that is meant to be read goes to --out, as
 Markdown or JSON; the numbers are also printed.
 
 Usage: python evaluation/revision/offline.py <analysis> [--archive DIR] [--results FILE]
-           [--out FILE|DIR] [--model qwen] [--agent mini-swe-agent] [--n 50] [--trees DIR]
+           [--out FILE|DIR] [--model qwen] [--agent mini-swe-agent] [--n 50] [--trees DIR] [--recomputed DIR]
 """
 import argparse
 import json
@@ -232,13 +232,17 @@ def lengths(args, results):
 
     out = {}
     for i in sorted(results["diagnoses"]):
-        tree = args.trees / i / "diagnosis" / "tree.pkl"
-        if not tree.exists():
+        written = args.recomputed / "lengths" / f"{i}.json" if args.recomputed else None
+        tree = args.trees / i / "diagnosis" / "tree.pkl" if args.trees else None
+        if written and written.exists():
+            out[i] = json.loads(written.read_text())
+        elif tree and tree.exists():
+            forecast = Forecast(load_tree(tree), max_chain_length=10 ** 9)
+            untruncated = len(forecast.derive_diagnosis().causes)
+            out[i] = {"initial": len(forecast._extract_cause_chain(forecast.root)),
+                      "untruncated": untruncated}
+        else:
             continue
-        forecast = Forecast(load_tree(tree), max_chain_length=10 ** 9)
-        untruncated = len(forecast.derive_diagnosis().causes)
-        out[i] = {"initial": len(forecast._extract_cause_chain(forecast.root)),
-                  "untruncated": untruncated}
         print(i, out[i])
     for key in ("initial", "untruncated"):
         values = sorted(v[key] for v in out.values())
@@ -260,11 +264,12 @@ def main():
     parser.add_argument("--agent", default="mini-swe-agent")
     parser.add_argument("--n", type=int, default=50)
     parser.add_argument("--trees", type=Path)
+    parser.add_argument("--recomputed", type=Path, help="out dir of recompute.py --lengths")
     args = parser.parse_args()
     if args.analysis == "sample" and not args.out:
         parser.error("sample writes a folder: pass --out")
-    if args.analysis == "lengths" and not args.trees:
-        parser.error("lengths recomputes the chains: pass --trees")
+    if args.analysis == "lengths" and not (args.trees or args.recomputed):
+        parser.error("lengths recomputes the chains: pass --trees or --recomputed")
     globals()[args.analysis](args, json.loads(args.results.read_text()))
 
 

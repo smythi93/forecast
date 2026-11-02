@@ -24,7 +24,8 @@ chains come from recompute.py, run where the trees are (--recomputed, its out di
   atoms      without conjunctions and disjunctions, for the chains with one
 
 Variants recomputed from the traced relevance trees here (--trees, the work dir of
-evaluation/scripts/diagnose.sh, with <trees>/<id>/diagnosis/tree.pkl):
+evaluation/scripts/diagnose.sh, with <trees>/<id>/diagnosis/tree.pkl), or taken from
+recompute.py (--recomputed):
   recomputed the default chain, to check that the trees reproduce the stored chains
   k<N>       at most N causes instead of 10, e.g. k5, k20
   t<X>       discriminability threshold X instead of 0.6, e.g. t0.4, t0.8
@@ -215,8 +216,8 @@ def main():
     if missing:
         sys.exit(f"{len(missing)} instances have no stored diagnosis, e.g. {missing[0]}")
     options = options_of(args.variant)
-    if options is not None and not args.trees:
-        sys.exit(f"{args.variant} is recomputed from the trees: pass --trees")
+    if options is not None and not (args.trees or args.recomputed):
+        sys.exit(f"{args.variant} is recomputed from the trees: pass --trees or --recomputed")
     if args.variant in REMOVES and not args.recomputed:
         sys.exit(f"{args.variant} takes the chains of recompute.py: pass --recomputed")
     if args.variant in ("testinfo", "withtests") and not args.failures:
@@ -247,6 +248,12 @@ def main():
             new = recomputed(args.variant, i, data, args.recomputed)
         elif args.variant == "wording":
             new = text_of(diagnosis_text_from_json(data).replace(SEPARATOR, "\n THEN \n"))
+        elif options is not None and args.recomputed:
+            path = args.recomputed / args.variant / i / "diagnosis.json"
+            if not path.exists():
+                sys.exit(f"{args.variant}: no recomputed diagnosis for {i} in {args.recomputed}")
+            new = json.loads(path.read_text())
+            same += new.get("text") == diagnosis_text_from_json(data)
         elif options is not None:
             new = recompute(i, args.trees, args.repos or args.trees / "repos", **options)
             same += new.get("text") == diagnosis_text_from_json(data)
