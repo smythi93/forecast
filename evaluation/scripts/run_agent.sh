@@ -13,6 +13,8 @@
 # MIRRORS (optional): a folder made by mirrors.sh; git then clones from there instead of
 # GitHub, which Agentless needs with many workers.
 # IDS (optional): a file with the instance ids to run instead of all 300.
+# instances-longest-first.txt holds all 300 ordered by an ACR run's times, longest first,
+# an approximation for every agent so that long instances do not block the end of a run.
 # Usage: bash evaluation/scripts/run_agent.sh <runs dir> <haiku|qwen> <agent> <baseline|forecast> [workers, default 10]
 set -e
 R=${1:?usage: run_agent.sh <runs dir> <haiku|qwen> <agent> <baseline|forecast> [workers]}
