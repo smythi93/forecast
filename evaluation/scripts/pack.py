@@ -7,13 +7,15 @@ packing the same results twice gives the same archive. Everything lies below one
 folder, <name>/, in the archive. The output directory gets
 
   <name>.tar.zst  the archive: results.json, the files given with --add, the diagnoses,
-                  and every run of every model, mode and agent
+                  and every run of every model, mode and agent; with --revision, also the
+                  runs of the revision (REVISION), and with --trees the traced relevance
+                  trees the diagnoses were derived from
   results.json    per instance the diagnosis (discriminability, causes and their types,
                   whether they name code the developer patch changes, test selection,
                   pipeline times) and per model, agent, mode and instance the repair
                   (verdict, error, patch size with and without the files the agent added,
                   exit status, calls, tokens, answers cut off at their token limit, cost,
-                  runtime); see README.md
+                  runtime); with --revision, the same per revision run; see README.md
   manifest.json   per part of the archive: files, raw bytes, rewritten occurrences,
                   forbidden hits
   SHA256SUMS      the archive's checksum
@@ -34,9 +36,17 @@ The developer patches and test lists come from the SWE-bench Lite dataset (--dat
 loaded with the `datasets` package, from its cache when offline); FORECAST never used the
 patches, results.json only compares the diagnoses with them.
 
+--revision DIR takes the revision's runs from DIR/<run>/ (evaluation/revision/repeat.sh and
+run_variant.sh made them): the repeated runs and the variants of the diagnosis in REVISION,
+each with its setup files (variant.json, changed.txt, ...), the runs of the instances it ran
+(changed.txt), and for a variant the diagnoses it injected. Reruns of single instances are
+not part of it. --trees DIR takes <DIR>/<instance>/diagnosis/tree.pkl and
+diagnosis/events/mapping.json for every instance, the layout evaluation/revision/recompute.py
+reads.
+
 Usage: python3 pack.py <runs dir> <out dir> [--name NAME] [--add FILE]... [--jobs N]
            [--rewrite OLD=NEW]... [--forbid STRING]... [--forbid-env NAME]... [--force]
-           [--dataset NAME]
+           [--dataset NAME] [--revision DIR] [--trees DIR]
 """
 import argparse, hashlib, json, os, re, subprocess, sys, tarfile
 from collections import Counter
@@ -56,6 +66,24 @@ AGENTS = ("mini-swe-agent", "swe-agent", "acr", "repair-agent", "agentless")
 DIAGNOSES = "haiku"
 #: The report steps that produce a diagnosis.
 STEPS = ("collect", "tree", "diagnose")
+MINI, RA = ("mini-swe-agent",), ("mini-swe-agent", "repair-agent")
+#: The revision's runs: folder -> (model, modes, agents). The repetitions rerun the evaluated
+#: runs; each variant replaces the diagnosis (variants.py) and ran in FORECAST mode.
+REVISION = {
+    "rep2": ("qwen", MODES, AGENTS), "rep3": ("qwen", MODES, AGENTS),
+    "haiku-rep2": ("haiku", ("forecast",), AGENTS),
+    "foreign": ("qwen", ("forecast",), RA), "testinfo": ("qwen", ("forecast",), MINI),
+    "unordered": ("qwen", ("forecast",), RA), "locations": ("qwen", ("forecast",), RA),
+    "nodiv": ("qwen", ("forecast",), RA), "sbfl": ("qwen", ("forecast",), MINI),
+    "atoms": ("qwen", ("forecast",), RA), "withtests": ("qwen", ("forecast",), MINI),
+    "wording": ("qwen", ("forecast",), RA),
+    "k5": ("qwen", ("forecast",), RA), "k20": ("qwen", ("forecast",), RA),
+    "t0.4": ("qwen", ("forecast",), RA), "t0.8": ("qwen", ("forecast",), RA),
+}
+#: The files of a tree's instance, below <trees dir>/<instance>/.
+TREE_FILES = ("diagnosis/tree.pkl", "diagnosis/events/mapping.json")
+#: Instances per part of the trees.
+TREES_PER_PART = 20
 ZSTD = ("zstd", "-19", "--long=27", "-T8", "-q", "-f")
 BLOCK, RECORD = 512, 10240
 DATASET = "princeton-nlp/SWE-bench_Lite"
@@ -199,17 +227,33 @@ def diagnosis(folder, steps, instance):
                 diagnose_seconds=steps.get("diagnose", {}).get("elapsed_seconds"))
 
 
-def results_json(diagnoses, repairs):
-    """`repairs` maps (model, agent, mode) to {instance: entry}."""
-    out = {"diagnoses": diagnoses, "repairs": {}}
+def nest(repairs):
+    """{model: {agent: {mode: {instance: entry}}}} from (model, agent, mode) -> {instance: entry}."""
+    out = {}
     for (model, agent, mode), instances in repairs.items():
-        out["repairs"].setdefault(model, {}).setdefault(agent, {})[mode] = instances
+        out.setdefault(model, {}).setdefault(agent, {})[mode] = instances
+    return out
+
+
+def results_json(diagnoses, repairs, revision=None):
+    """`repairs` maps (model, agent, mode) to {instance: entry}; `revision` maps a revision
+    run to its variant.json and its repairs, in the same form."""
+    out = {"diagnoses": diagnoses, "repairs": nest(repairs)}
+    if revision:
+        out["revision"] = {run: {"variant": r["variant"], "instances": r["instances"],
+                                 "repairs": nest(r["repairs"])} for run, r in revision.items()}
     return json.dumps(out, indent=1) + "\n"
 
 
-def write_results(diagnoses, repairs, path):
+def write_results(diagnoses, repairs, path, revision=None):
     with open(path, "w") as f:
-        f.write(results_json(diagnoses, repairs))
+        f.write(results_json(diagnoses, repairs, revision))
+
+
+def revision_instances(folder, ids):
+    """The instances a revision run ran (its changed.txt), in the order of `ids`."""
+    changed = set(open(f"{folder}/changed.txt").read().split())
+    return [i for i in ids if i in changed]
 
 
 def files(path):
@@ -282,6 +326,8 @@ def main():
     p.add_argument("--forbid-env", action="append", default=[], metavar="NAME")
     p.add_argument("--force", action="store_true")
     p.add_argument("--dataset", default=DATASET, help="SWE-bench Lite, for the developer patches")
+    p.add_argument("--revision", metavar="DIR", help="the revision's runs, DIR/<run>/ (REVISION)")
+    p.add_argument("--trees", metavar="DIR", help="the trees, DIR/<instance>/diagnosis/tree.pkl")
     a = p.parse_args()
     root = os.path.abspath(os.path.expanduser(a.runs_dir))
     out = os.path.abspath(os.path.expanduser(a.out_dir))
@@ -338,8 +384,57 @@ def main():
                         members.append((verdict, f"{prefix}/{i}/evaluate/{agent}/{mode}/result.json"))
                 extra = [(f"{prefix}/{agent}.txt", listing)]
                 jobs.append((part, members, extra, out, rewrites, forbidden))
+    revision = {}
+    if a.revision:
+        rev = os.path.abspath(os.path.expanduser(a.revision))
+        absent = [run for run in REVISION if not os.path.isfile(f"{rev}/{run}/changed.txt")]
+        if absent:
+            sys.exit(f"--revision: {rev} has no {', '.join(absent)}")
+        for run, (model, modes, agents) in REVISION.items():
+            folder, prefix = f"{rev}/{run}", f"{top}/revision/{run}"
+            variant = load(f"{folder}/variant.json")
+            ran = revision_instances(folder, ids)
+            revision[run] = {"variant": variant, "instances": ran, "repairs": {}}
+            # The setup files, and the diagnoses a variant injected (a repetition's are the evaluated ones).
+            part = f"revision-{run}"
+            parts.append(part)
+            if todo(part):
+                members = [(f"{folder}/{n}", f"{prefix}/{n}") for n in sorted(os.listdir(folder))
+                           if os.path.isfile(f"{folder}/{n}")]
+                if variant["variant"] != "full":
+                    members += [(f"{folder}/{model}/{i}/diagnosis", f"{prefix}/diagnoses/{i}") for i in ran]
+                jobs.append((part, members, [], out, rewrites, forbidden))
+            for mode in modes:
+                for agent in agents:
+                    src = f"{folder}/{model}"
+                    revision[run]["repairs"][model, agent, mode] = {i: repair(src, agent, mode, i) for i in ran}
+                    part = f"revision-{run}-{model}-{mode}-{agent}"
+                    parts.append(part)
+                    if not todo(part):
+                        continue
+                    members, dest = [], f"{prefix}/{model}/{mode}"
+                    for i in ran:
+                        members.append((f"{src}/{i}/run/{agent}/{mode}", f"{dest}/{i}/run/{agent}/{mode}"))
+                        verdict = f"{src}/{i}/evaluate/{agent}/{mode}/result.json"
+                        if os.path.exists(verdict):
+                            members.append((verdict, f"{dest}/{i}/evaluate/{agent}/{mode}/result.json"))
+                    extra = [(f"{dest}/{agent}.txt", "".join(f"{i}\n" for i in ran).encode())]
+                    jobs.append((part, members, extra, out, rewrites, forbidden))
+    if a.trees:
+        trees = os.path.abspath(os.path.expanduser(a.trees))
+        absent = [i for i in ids if not all(os.path.isfile(f"{trees}/{i}/{f}") for f in TREE_FILES)]
+        if absent:
+            sys.exit(f"--trees: {len(absent)} instances have no {' or '.join(TREE_FILES)} in {trees}, e.g. {absent[0]}")
+        for k in range(0, len(ids), TREES_PER_PART):
+            part = f"trees-{k // TREES_PER_PART + 1:02d}"
+            parts.append(part)
+            if todo(part):
+                members = [(f"{trees}/{i}/{f}", f"{top}/trees/{i}/{f}") for i in ids[k:k + TREES_PER_PART]
+                           for f in TREE_FILES]
+                extra = [(f"{top}/trees/instances.txt", listing)] if k == 0 else []
+                jobs.append((part, members, extra, out, rewrites, forbidden))
     # The top part (results.json and the added files) is small and always packed again.
-    results = results_json(diagnoses, repairs)
+    results = results_json(diagnoses, repairs, revision)
     with open(f"{out}/results.json", "w") as f:
         f.write(results)
     extra = [(f"{top}/results.json", results.encode())]

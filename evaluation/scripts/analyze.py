@@ -53,20 +53,32 @@ STEPS = ("collect_seconds", "tree_seconds", "diagnose_seconds")
 
 def rebuild(src, out):
     """Write results.json from the extracted archive."""
-    from pack import diagnosis, load, repair, swe_bench_lite, write_results
+    from pack import REVISION, diagnosis, load, repair, revision_instances, swe_bench_lite, write_results
     ids = open(f"{src}/diagnoses/instances.txt").read().split()
     lite = swe_bench_lite()
     diagnoses = {i: diagnosis(f"{src}/diagnoses/{i}", load(f"{src}/diagnoses/{i}/pipeline.json") or {}, lite[i])
                  for i in ids}
-    repairs = {}
-    for model in MODELS:
-        for mode in MODES:
-            for agent in AGENTS:
-                listing = f"{src}/{model}/{mode}/{agent}.txt"
-                if os.path.exists(listing):
-                    repairs[model, agent, mode] = {i: repair(f"{src}/{model}/{mode}", agent, mode, i)
-                                                   for i in open(listing).read().split()}
-    write_results(diagnoses, repairs, out)
+
+    def runs(folder, models, modes, agents):
+        found = {}
+        for model in models:
+            for mode in modes:
+                for agent in agents:
+                    listing = f"{folder}/{model}/{mode}/{agent}.txt"
+                    if os.path.exists(listing):
+                        found[model, agent, mode] = {i: repair(f"{folder}/{model}/{mode}", agent, mode, i)
+                                                     for i in open(listing).read().split()}
+        return found
+
+    repairs = runs(src, MODELS, MODES, AGENTS)
+    revision = {}
+    for run, (model, modes, agents) in REVISION.items():
+        folder = f"{src}/revision/{run}"
+        if os.path.isdir(folder):
+            revision[run] = {"variant": load(f"{folder}/variant.json"),
+                             "instances": revision_instances(folder, ids),
+                             "repairs": runs(folder, (model,), modes, agents)}
+    write_results(diagnoses, repairs, out, revision)
 
 
 def dist(values, fmt="{:,.0f}"):

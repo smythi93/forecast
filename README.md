@@ -318,9 +318,47 @@ Everything needed to reproduce the results is in this repository:
 | `evaluation/scripts/analyze.py` | answers the research questions from `results.json` |
 | `evaluation/scripts/plot.py` | draws the paper's figures (diagnosis time, repair time) from `results.json` (needs matplotlib) |
 | `evaluation/results/` | `results.json` of the paper's runs, and the archive's `manifest.json` and `SHA256SUMS` |
+| `evaluation/revision/` | the repeated runs and the variants of the diagnosis (see [Repeated runs and variants](#repeated-runs-and-variants)) |
 
-The runs themselves, about 54 GiB, are on Zenodo as one file,
-`forecast-results.tar.zst` (DOI: _to be added_).
+The runs themselves are on Zenodo as one file, `forecast-results.tar.zst`
+(DOI: _to be added_).
+
+## Repeated runs and variants
+
+Besides the main runs, the archive holds two kinds of further runs, under `revision/`:
+
+- **Repeated runs** of the main runs, with the same diagnoses: Qwen in both modes with all
+  five agents (`rep2`, `rep3`), and Haiku in the forecast mode with all five agents
+  (`haiku-rep2`). They measure how much a run varies when it is repeated.
+- **Variants of the diagnosis**, which replace the chain with something else and run Qwen
+  in the forecast mode with mini-SWE-agent and RepairAgent (only mini-SWE-agent for
+  `testinfo`, `sbfl` and `withtests`, whose information RepairAgent already gets).
+
+| Variant | What the agent gets instead of the chain |
+|---|---|
+| `foreign` | the chain of another instance of the same project (`donors.json`) |
+| `testinfo` | the failing tests and their output on the unchanged code |
+| `unordered` | the same causes in a random order, as a list without `LEADS TO` |
+| `locations` | only the file, line or function each cause names, with its discriminability |
+| `nodiv` | the chain recomputed from the tree without divergences |
+| `sbfl` | the ten methods spectrum-based fault localization ranks highest |
+| `atoms` | the chain recomputed without conjunctions and disjunctions |
+| `withtests` | the chain, followed by the failing tests and their output |
+| `wording` | the chain, introduced as observations and joined by `THEN` |
+| `k5`, `k20` | the chain recomputed with at most 5 or 20 causes instead of 10 |
+| `t0.4`, `t0.8` | the chain recomputed with a minimal discriminability of 0.4 or 0.8 instead of 0.6 |
+
+A variant runs only the instances whose prompt it changes (`changed.txt`); the others
+keep the outcome of the main forecast run. The variants are built by
+`evaluation/revision/variants.py` (the recomputed ones from the trees, with
+`recompute.py`) and run by `run_variant.sh`; the repeated runs by `repeat.sh`:
+
+```bash
+bash evaluation/revision/repeat.sh <runs> <out>/rep2 qwen mini-swe-agent 16       # both modes
+python evaluation/revision/variants.py foreign <runs> <out>/foreign
+bash evaluation/revision/run_variant.sh <out>/foreign qwen mini-swe-agent 16
+python evaluation/revision/compare.py <out>/foreign --model qwen --agent mini-swe-agent
+```
 
 ## Analyzing the results
 
@@ -398,9 +436,13 @@ Run the scripts from the repository root, after the [installation](#installation
    and packs everything into one archive:
 
    ```bash
-   python3 evaluation/scripts/pack.py <runs> <out> --add README.md
+   python3 evaluation/scripts/pack.py <runs> <out> --add README.md \
+       --revision <revision runs> --trees <work>
    python3 evaluation/scripts/analyze.py --results <out>/results.json
    ```
+
+   `--revision` and `--trees` are optional; they add the repeated runs and variants and
+   the relevance trees.
 
 ## Results
 
@@ -457,6 +499,15 @@ explain the fields; the file itself is plain JSON.
         }
       }
     }
+  },
+  "revision": {
+    "<run>": {                          // rep2, rep3, haiku-rep2, or a variant
+      "variant": {"variant": "k5", "model": "qwen", "options": {"max_chain_length": 5}, ...},
+                                        // how the run's diagnoses were made (variant.json)
+      "instances": ["<instance>", ...], // the instances it ran (changed.txt)
+      "repairs": {"<model>": {"<agent>": {"<mode>": {"<instance>": {...}}}}}
+                                        // as above, for the instances it ran
+    }
   }
 }
 ```
@@ -484,8 +535,9 @@ about three million tokens per run.
 
 ## The archive
 
-`forecast-results.tar.zst` holds this README, `results.json`, the diagnoses and every
-run. It is about 320 MB; extracted it takes about 54 GiB.
+`forecast-results.tar.zst` holds this README, `results.json`, the diagnoses, every run,
+the repeated runs and variants, and the relevance trees. It is about _to be added_;
+extracted it takes about _to be added_.
 
 ```bash
 sha256sum -c SHA256SUMS                        # SHA256SUMS from evaluation/results/
@@ -521,7 +573,24 @@ forecast-results/
               <trajectory>         the upstream agent's own trajectory, see below
       <instance>/evaluate/<agent>/<mode>/result.json
                                    SWE-bench harness verdict: resolved, applied, per-test status
+  revision/<run>/                  a repeated run or a variant (see Repeated runs and variants)
+      variant.json                 how its diagnoses were made
+      changed.txt                  the instances it ran
+      as_baseline.txt              instances whose prompt is the baseline's (none here)
+      preamble.txt                 the sentence that introduces the injected text, if not the usual
+      donors.json                  foreign: the instance whose chain each instance got
+      diagnoses/<instance>/        a variant's diagnosis, as in diagnoses/
+      <model>/<mode>/              the runs, as in <model>/<mode>/ above
+  trees/
+      instances.txt                the 300 instances
+      <instance>/diagnosis/
+          tree.pkl                 the traced relevance tree the diagnosis was derived from
+          events/mapping.json      the events' code locations, to name the functions
 ```
+
+The trees are those the recomputed variants were derived from
+(`evaluation/revision/recompute.py forecast-results/trees <ids> <out> --repos <checkouts>`,
+with `<checkouts>/<instance>` the repository at the instance's base commit).
 
 | Agent | Upstream trajectory in `trajs/<instance>/` |
 |---|---|
@@ -543,8 +612,9 @@ stores no owner and no time stamps. `pack.py` checks every archived file:
 The archive leaves out:
 
 - the SWE-bench harness's test logs (the verdict file keeps the per-test outcome);
-- FORECAST's execution traces and relevance trees;
-- the schedulers' logs.
+- FORECAST's execution traces (the trees built from them are in `trees/`);
+- the schedulers' logs;
+- reruns of single instances, and runs that were stopped.
 
 `results.json` also compares the diagnoses with the developer patches, which `pack.py`
 reads from SWE-bench Lite (`--dataset`, through the `datasets` package); FORECAST never
