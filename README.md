@@ -442,7 +442,8 @@ Run the scripts from the repository root, after the [installation](#installation
    ```
 
    `--revision` and `--trees` are optional; they add the repeated runs and variants and
-   the relevance trees.
+   the relevance trees. With `--results-only`, `pack.py` writes only `<out>/results.json`
+   and packs nothing.
 
 ## Results
 

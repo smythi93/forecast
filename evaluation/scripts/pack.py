@@ -40,13 +40,15 @@ patches, results.json only compares the diagnoses with them.
 run_variant.sh made them): the repeated runs and the variants of the diagnosis in REVISION,
 each with its setup files (variant.json, changed.txt, ...), the runs of the instances it ran
 (changed.txt), and for a variant the diagnoses it injected. Reruns of single instances are
-not part of it. --trees DIR takes <DIR>/<instance>/diagnosis/tree.pkl and
-diagnosis/events/mapping.json for every instance, the layout evaluation/revision/recompute.py
-reads.
+never part of it, neither of the archive nor of results.json. --trees DIR takes
+<DIR>/<instance>/diagnosis/tree.pkl and diagnosis/events/mapping.json for every instance,
+the layout evaluation/revision/recompute.py reads.
+
+--results-only writes only <out dir>/results.json, from the same runs, and packs nothing.
 
 Usage: python3 pack.py <runs dir> <out dir> [--name NAME] [--add FILE]... [--jobs N]
            [--rewrite OLD=NEW]... [--forbid STRING]... [--forbid-env NAME]... [--force]
-           [--dataset NAME] [--revision DIR] [--trees DIR]
+           [--dataset NAME] [--revision DIR] [--trees DIR] [--results-only]
 """
 import argparse, hashlib, json, os, re, subprocess, sys, tarfile
 from collections import Counter
@@ -328,10 +330,11 @@ def main():
     p.add_argument("--dataset", default=DATASET, help="SWE-bench Lite, for the developer patches")
     p.add_argument("--revision", metavar="DIR", help="the revision's runs, DIR/<run>/ (REVISION)")
     p.add_argument("--trees", metavar="DIR", help="the trees, DIR/<instance>/diagnosis/tree.pkl")
+    p.add_argument("--results-only", action="store_true", help="write only results.json, pack nothing")
     a = p.parse_args()
     root = os.path.abspath(os.path.expanduser(a.runs_dir))
     out = os.path.abspath(os.path.expanduser(a.out_dir))
-    os.makedirs(f"{out}/parts", exist_ok=True)
+    os.makedirs(out if a.results_only else f"{out}/parts", exist_ok=True)
     top = a.name
     rewrites = [tuple(s.encode() for s in r.split("=", 1)) for r in a.rewrite]
     forbidden = {s: s.encode() for s in a.forbid}
@@ -437,6 +440,9 @@ def main():
     results = results_json(diagnoses, repairs, revision)
     with open(f"{out}/results.json", "w") as f:
         f.write(results)
+    if a.results_only:
+        print(f"done: {out}/results.json")
+        return
     extra = [(f"{top}/results.json", results.encode())]
     for path in a.add:
         with open(path, "rb") as f:
