@@ -239,7 +239,14 @@ def rq1(res):
                 b, f = resolved(runs["baseline"]), resolved(runs["forecast"])
                 for k, v in enumerate((len(b), len(f), len(runs["baseline"]), len(b & f), len(f - b), len(b - f))):
                     s[k] += v
-            rows.append(_rq1_row(f"**{label}**", *s[:3]) + (*s[3:], ""))
+            # The agents' outcomes for an instance are not independent, so the total is tested with the
+            # exact sign test over the instances: more agents resolve it with the diagnosis, or fewer.
+            change = [sum(bool(res["repairs"][m][a]["forecast"][i]["resolved"]) -
+                          bool(res["repairs"][m][a]["baseline"][i]["resolved"]) for a in agents)
+                      for i in res["diagnoses"]]
+            tests += 1
+            rows.append(_rq1_row(f"**{label}**", *s[:3]) +
+                        (*s[3:], f"{mcnemar(sum(c > 0 for c in change), sum(c < 0 for c in change)):.2g} (sign test)"))
         table(("Agent", "Baseline", "FORECAST", "Change", "Change (pp)", "Relative change", "Both",
                "Only FORECAST", "Only baseline", "p (McNemar)"), rows)
         ids = list(res["diagnoses"])
