@@ -29,8 +29,8 @@ which zstd decompresses as one stream and tar reads as one archive.
 never printed) count occurrences of a string in every archived file after any rewrite.
 Every archived file is also checked for dates written at run time, by the same rules
 forecast.run_dates removed them with after each run (patches are exempt). Any hit is
-reported (dated files are listed in manifest.json) and makes the exit status 1. Parts that already exist are kept, so an
-interrupted run resumes; --force packs everything again.
+reported (dated files are listed in manifest.json) and makes the exit status 1. Parts that already exist and
+have their checks in manifest.json are kept, so an interrupted run resumes; --force packs everything again.
 
 The developer patches and test lists come from the SWE-bench Lite dataset (--dataset,
 loaded with the `datasets` package, from its cache when offline); FORECAST never used the
@@ -354,8 +354,11 @@ def main():
     ids = folders[MODELS[0]]
     listing = "".join(f"{i}\n" for i in ids).encode()
 
+    # A part is packed again unless it exists and the manifest holds its checks.
+    manifest = load(f"{out}/manifest.json") or {}
+
     def todo(part):
-        return a.force or not os.path.exists(f"{out}/parts/{part}.zst")
+        return a.force or not os.path.exists(f"{out}/parts/{part}.zst") or part not in manifest
 
     parts, jobs, diagnoses, repairs = [], [], {}, {}
     steps = {i: pipeline(load(f"{root}/{DIAGNOSES}/{i}/report.json")) for i in ids}
@@ -451,7 +454,6 @@ def main():
     jobs.insert(0, ("top", [], extra, out, rewrites, forbidden))
 
     print(f"{len(parts)} parts, {len(jobs)} to pack", flush=True)
-    manifest = load(f"{out}/manifest.json") or {}
     with Pool(a.jobs) as pool:
         for part, stats in pool.imap_unordered(pack, jobs):
             manifest[part] = stats
