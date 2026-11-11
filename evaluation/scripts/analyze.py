@@ -255,7 +255,7 @@ def rq1(res):
         print(f"Resolved by at least one agent: baseline {len(anyb)} ({pct(len(anyb), len(ids))}), "
               f"FORECAST {len(anyf)} ({pct(len(anyf), len(ids))}); by some agent only with FORECAST "
               f"{len(anyf - anyb)}, only without {len(anyb - anyf)}\n")
-    print(f"Bonferroni-corrected significance level over the {tests} McNemar tests: {0.05 / tests:.3g}\n")
+    print(f"Bonferroni-corrected significance level over the {tests} tests (McNemar per agent, sign test for all agents): {0.05 / tests:.3g}\n")
 
 
 def _rq1_row(name, b, f, n):
