@@ -21,8 +21,9 @@ Sections (all by default, or the ones named):
   exits         how SWE-agent and mini-SWE-agent runs ended (submitted, cost limit, ...)
   truncation    answers cut off at their token limit, per agent
   repeated      (RQ1) the repeated runs: resolved instances per run and their mean, the gain
-                of each repetition over its own baseline (exact McNemar test), and the
-                instances one run of a mode resolves but another does not
+                of every FORECAST run over every baseline run (exact McNemar test; the runs
+                of a mode are interchangeable), and the instances one run of a mode resolves
+                but another does not
   variants      (RQ5) each variant of the diagnosis against the main FORECAST run (exact
                 McNemar test)
 
@@ -491,18 +492,28 @@ def repeated(res):
         print("Resolved instances per run, and their mean over the runs.\n")
         table(["Agent"] + [f"{mode} {n}" for mode in modes for n in names + ("mean",)], rows)
         if len(modes) == 2:
-            rows = []
+            # The runs of a mode are interchangeable, so every FORECAST run is compared with every baseline run.
+            rows, summary = [], []
             for agent in AGENTS:
-                row = [NAMES[agent]]
-                for k in range(len(names)):
-                    b, f = resolved(per[agent, "baseline"][k]), resolved(per[agent, "forecast"][k])
-                    row.append(f"{len(f) - len(b):+d} ({len(f - b)}/{len(b - f)}, "
-                               f"p={mcnemar(len(f - b), len(b - f)):.2g})")
-                    tests += k > 0
-                rows.append(row)
-            print("Gain of each run's FORECAST mode over its own baseline: change "
+                gains, ps = [], []
+                for j, fn in enumerate(names):
+                    f = resolved(per[agent, "forecast"][j])
+                    row = [NAMES[agent], fn]
+                    for k in range(len(names)):
+                        b = resolved(per[agent, "baseline"][k])
+                        p = mcnemar(len(f - b), len(b - f))
+                        row.append(f"{len(f) - len(b):+d} ({len(f - b)}/{len(b - f)}, p={p:.2g})")
+                        gains.append(len(f) - len(b))
+                        ps.append(p)
+                        tests += 1
+                    rows.append(row)
+                means = [statistics.mean(len(resolved(r)) for r in per[agent, mode]) for mode in MODES]
+                summary.append((NAMES[agent], f"{means[1] - means[0]:+.1f}", f"{min(gains):+d} to {max(gains):+d}",
+                                f"{max(ps):.2g}"))
+            print("Gain of every FORECAST run over every baseline run: change "
                   "(only FORECAST/only baseline, exact McNemar p).\n")
-            table(["Agent"] + list(names), rows)
+            table(["Agent", "FORECAST run"] + [f"vs baseline {n}" for n in names], rows)
+            table(("Agent", "Mean FORECAST - mean baseline", "Gain range", "Largest p"), summary)
         pairs = [(j, k) for j in range(len(names)) for k in range(j + 1, len(names))]
         rows = []
         for agent in AGENTS:
@@ -513,7 +524,7 @@ def repeated(res):
         print("Run-to-run variation: instances only the first/only the second run of each pair resolves.\n")
         table(["Agent", "Mode"] + [f"{names[j]} vs {names[k]}" for j, k in pairs], rows)
     if tests:
-        print(f"Bonferroni-corrected significance level over the {tests} gains of the repetitions: "
+        print(f"Bonferroni-corrected significance level over the {tests} FORECAST-baseline comparisons: "
               f"{0.05 / tests:.3g}\n")
 
 

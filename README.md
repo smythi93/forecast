@@ -384,7 +384,7 @@ python3 evaluation/scripts/analyze.py rq1 rq3      # only these
 | `patches` | RQ3 | patches that add files the agent created for itself; changed lines and files in existing files |
 | `rq4` | RQ4 | diagnosis overhead (instrumentation, collection, tree, diagnosis) against tokens, cost and repair time per instance, time including the instance's own diagnosis, cost and time per resolved instance, LLM cost over all agents |
 | `truncation` | Setup | answers cut off at their token limit, per agent, model, mode and limit |
-| `repeated` | RQ1 | the repeated runs: resolved instances per run and their mean, the gain of each repetition over its own baseline (paired exact McNemar test), instances one run of a mode resolves but another does not |
+| `repeated` | RQ1 | the repeated runs: resolved instances per run and their mean, the gain of every FORECAST run over every baseline run (paired exact McNemar test), instances one run of a mode resolves but another does not |
 | `variants` | RQ5 | each variant of the diagnosis against the main FORECAST run: resolved instances, instances gained and lost, paired exact McNemar test |
 
 `repeated` and `variants` need the revision runs in `results.json` (`pack.py --revision`).
