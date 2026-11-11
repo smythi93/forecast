@@ -20,8 +20,13 @@ Sections (all by default, or the ones named):
                 the changes to existing files
   exits         how SWE-agent and mini-SWE-agent runs ended (submitted, cost limit, ...)
   truncation    answers cut off at their token limit, per agent
+  repeated      (RQ1) the repeated runs: resolved instances per run and their mean, the gain
+                of each repetition over its own baseline (exact McNemar test), and the
+                instances one run of a mode resolves but another does not
+  variants      (RQ5) each variant of the diagnosis against the main FORECAST run (exact
+                McNemar test)
 
-Every run counts; a run without a harness verdict counts as unresolved. Costs use
+The last two need the revision runs in results.json (pack.py --revision). Every run counts; a run without a harness verdict counts as unresolved. Costs use
 Anthropic's list prices for Claude Haiku 4.5, never a price a provider or proxy reports:
 "cost" is the per-call cost FORECAST computed with prompt caching ($1/M input, $5/M
 output, $1.25/M cache writes, $0.10/M cache reads), "no cache" prices every prompt token
@@ -44,7 +49,14 @@ NAMES = {"mini-swe-agent": "mini-swe-agent", "swe-agent": "SWE-agent", "acr": "A
          "repair-agent": "RepairAgent", "agentless": "Agentless",
          "haiku": "Claude Haiku 4.5", "qwen": "Qwen3.5 27B"}
 SECTIONS = ("overview", "subjects", "diagnoses", "rq1", "rq3", "rq4",
-            "causes", "localization", "selection", "patches", "exits", "truncation")
+            "causes", "localization", "selection", "patches", "exits", "truncation", "repeated", "variants")
+#: The repeated runs of the revision (results.json "revision"), per model.
+REPEATS = {"qwen": ("rep2", "rep3"), "haiku": ("haiku-rep2",)}
+#: The variants of the diagnosis, in the paper's order, with their names there.
+VARIANTS = {"foreign": "Foreign", "unordered": "Unordered", "locations": "Locations",
+            "nodiv": "No divergences", "atoms": "Atoms", "testinfo": "Test output", "sbfl": "SBFL",
+            "withtests": "Chain and test output", "wording": "Wording", "k5": "k = 5", "k20": "k = 20",
+            "t0.4": "t = 0.4", "t0.8": "t = 0.8"}
 #: Claude Haiku 4.5 list price per token (input, output).
 PRICE_IN, PRICE_OUT = 1e-6, 5e-6
 #: The diagnosis steps whose times add up to a diagnosis's overhead.
@@ -445,6 +457,95 @@ def truncation(res):
                     rows.append((NAMES[m], mode, limit, n, f"{cut} ({pct(cut, n)})", stopped))
         print(f"### {NAMES[agent]}\n")
         table(("Model", "Mode", "Limit (requested->given)", "Answers", "Cut off", "Runs with a cut-off answer"), rows)
+
+
+def revision_runs(res, run, model, agent, mode):
+    """Instance -> entry of a revision run over all instances, or None if it has no such run.
+    The instances it did not run (outside its changed.txt, their prompt is the main run's)
+    take the main run's outcome of the same mode."""
+    runs = res.get("revision", {}).get(run, {}).get("repairs", {}).get(model, {}).get(agent, {}).get(mode)
+    return None if runs is None else {**res["repairs"][model][agent][mode], **runs}
+
+
+def repeated(res):
+    print("## RQ1: Repeated runs\n")
+    if "revision" not in res:
+        print("results.json has no revision runs (pack.py --revision).\n")
+        return
+    tests = 0
+    for m, reps in REPEATS.items():
+        names = ("main",) + reps
+        modes = [mode for mode in MODES if all(revision_runs(res, r, m, AGENTS[0], mode) for r in reps)]
+        if not modes:
+            continue
+        print(f"### {NAMES[m]}\n")
+        per = {(agent, mode): [res["repairs"][m][agent][mode]] + [revision_runs(res, r, m, agent, mode) for r in reps]
+               for agent in AGENTS for mode in modes}
+        rows = []
+        for agent in AGENTS:
+            row = [NAMES[agent]]
+            for mode in modes:
+                counts = [len(resolved(runs)) for runs in per[agent, mode]]
+                row += counts + [f"{statistics.mean(counts):.1f}"]
+            rows.append(row)
+        print("Resolved instances per run, and their mean over the runs.\n")
+        table(["Agent"] + [f"{mode} {n}" for mode in modes for n in names + ("mean",)], rows)
+        if len(modes) == 2:
+            rows = []
+            for agent in AGENTS:
+                row = [NAMES[agent]]
+                for k in range(len(names)):
+                    b, f = resolved(per[agent, "baseline"][k]), resolved(per[agent, "forecast"][k])
+                    row.append(f"{len(f) - len(b):+d} ({len(f - b)}/{len(b - f)}, "
+                               f"p={mcnemar(len(f - b), len(b - f)):.2g})")
+                    tests += k > 0
+                rows.append(row)
+            print("Gain of each run's FORECAST mode over its own baseline: change "
+                  "(only FORECAST/only baseline, exact McNemar p).\n")
+            table(["Agent"] + list(names), rows)
+        pairs = [(j, k) for j in range(len(names)) for k in range(j + 1, len(names))]
+        rows = []
+        for agent in AGENTS:
+            for mode in modes:
+                runs = [resolved(r) for r in per[agent, mode]]
+                rows.append([NAMES[agent], mode] + [f"{len(runs[j] - runs[k])}/{len(runs[k] - runs[j])}"
+                                                    for j, k in pairs])
+        print("Run-to-run variation: instances only the first/only the second run of each pair resolves.\n")
+        table(["Agent", "Mode"] + [f"{names[j]} vs {names[k]}" for j, k in pairs], rows)
+    if tests:
+        print(f"Bonferroni-corrected significance level over the {tests} gains of the repetitions: "
+              f"{0.05 / tests:.3g}\n")
+
+
+def variants(res):
+    print("## RQ5: Variants of the diagnosis\n")
+    if "revision" not in res:
+        print("results.json has no revision runs (pack.py --revision).\n")
+        return
+    print("Each variant against the main FORECAST run on all instances; the instances a variant did "
+          "not run (its prompt is the main run's) keep the main run's outcome. Run: instances the "
+          "variant ran.\n")
+    tests = 0
+    for m in res["repairs"]:
+        for agent in AGENTS:
+            b, f = (resolved(res["repairs"][m][agent][mode]) for mode in MODES)
+            rows = []
+            for v, name in VARIANTS.items():
+                runs = revision_runs(res, v, m, agent, "forecast")
+                if runs is None:
+                    continue
+                r = resolved(runs)
+                tests += 1
+                rows.append((name, len(res["revision"][v]["repairs"][m][agent]["forecast"]),
+                             f"{len(r)}/{len(runs)} ({pct(len(r), len(runs))})", f"{len(r) - len(f):+d}",
+                             len(r - f), len(f - r), f"{mcnemar(len(r - f), len(f - r)):.2g}",
+                             f"{len(r) - len(b):+d} ({len(r - b)}/{len(b - r)})"))
+            if rows:
+                print(f"### {NAMES[m]}, {NAMES[agent]} (main run: baseline {len(b)}, FORECAST {len(f)})\n")
+                table(("Variant", "Run", "Resolved", "Change", "Only variant", "Only FORECAST", "p (McNemar)",
+                       "Against baseline (only variant/only baseline)"), rows)
+    if tests:
+        print(f"Bonferroni-corrected significance level over the {tests} comparisons: {0.05 / tests:.3g}\n")
 
 
 def main():
