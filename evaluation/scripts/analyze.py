@@ -475,54 +475,52 @@ def repeated(res):
         return
     tests = 0
     for m, reps in REPEATS.items():
-        names = ("main",) + reps
-        modes = [mode for mode in MODES if all(revision_runs(res, r, m, AGENTS[0], mode) for r in reps)]
-        if not modes:
+        # The runs of a mode: the main run and every repetition of that mode.
+        names = {mode: ["main"] + [r for r in reps if revision_runs(res, r, m, AGENTS[0], mode)] for mode in MODES}
+        if all(len(n) == 1 for n in names.values()):
             continue
         print(f"### {NAMES[m]}\n")
-        per = {(agent, mode): [res["repairs"][m][agent][mode]] + [revision_runs(res, r, m, agent, mode) for r in reps]
-               for agent in AGENTS for mode in modes}
+        per = {(agent, mode): [res["repairs"][m][agent][mode] if n == "main" else revision_runs(res, n, m, agent, mode)
+                               for n in names[mode]] for agent in AGENTS for mode in MODES}
         rows = []
         for agent in AGENTS:
             row = [NAMES[agent]]
-            for mode in modes:
+            for mode in MODES:
                 counts = [len(resolved(runs)) for runs in per[agent, mode]]
                 row += counts + [f"{statistics.mean(counts):.1f}"]
             rows.append(row)
         print("Resolved instances per run, and their mean over the runs.\n")
-        table(["Agent"] + [f"{mode} {n}" for mode in modes for n in names + ("mean",)], rows)
-        if len(modes) == 2:
-            # The runs of a mode are interchangeable, so every FORECAST run is compared with every baseline run.
-            rows, summary = [], []
-            for agent in AGENTS:
-                gains, ps = [], []
-                for j, fn in enumerate(names):
-                    f = resolved(per[agent, "forecast"][j])
-                    row = [NAMES[agent], fn]
-                    for k in range(len(names)):
-                        b = resolved(per[agent, "baseline"][k])
-                        p = mcnemar(len(f - b), len(b - f))
-                        row.append(f"{len(f) - len(b):+d} ({len(f - b)}/{len(b - f)}, p={p:.2g})")
-                        gains.append(len(f) - len(b))
-                        ps.append(p)
-                        tests += 1
-                    rows.append(row)
-                means = [statistics.mean(len(resolved(r)) for r in per[agent, mode]) for mode in MODES]
-                summary.append((NAMES[agent], f"{means[1] - means[0]:+.1f}", f"{min(gains):+d} to {max(gains):+d}",
-                                f"{max(ps):.2g}"))
-            print("Gain of every FORECAST run over every baseline run: change "
-                  "(only FORECAST/only baseline, exact McNemar p).\n")
-            table(["Agent", "FORECAST run"] + [f"vs baseline {n}" for n in names], rows)
-            table(("Agent", "Mean FORECAST - mean baseline", "Gain range", "Largest p"), summary)
-        pairs = [(j, k) for j in range(len(names)) for k in range(j + 1, len(names))]
-        rows = []
+        table(["Agent"] + [f"{mode} {n}" for mode in MODES for n in names[mode] + ["mean"]], rows)
+        # The runs of a mode are interchangeable, so every FORECAST run is compared with every baseline run.
+        rows, summary = [], []
         for agent in AGENTS:
-            for mode in modes:
+            gains, ps = [], []
+            for fn, runs in zip(names["forecast"], per[agent, "forecast"]):
+                f = resolved(runs)
+                row = [NAMES[agent], fn]
+                for b in map(resolved, per[agent, "baseline"]):
+                    p = mcnemar(len(f - b), len(b - f))
+                    row.append(f"{len(f) - len(b):+d} ({len(f - b)}/{len(b - f)}, p={p:.2g})")
+                    gains.append(len(f) - len(b))
+                    ps.append(p)
+                    tests += 1
+                rows.append(row)
+            means = [statistics.mean(len(resolved(r)) for r in per[agent, mode]) for mode in MODES]
+            summary.append((NAMES[agent], f"{means[1] - means[0]:+.1f}", f"{min(gains):+d} to {max(gains):+d}",
+                            f"{max(ps):.2g}"))
+        print("Gain of every FORECAST run over every baseline run: change "
+              "(only FORECAST/only baseline, exact McNemar p).\n")
+        table(["Agent", "FORECAST run"] + [f"vs baseline {n}" for n in names["baseline"]], rows)
+        table(("Agent", "Mean FORECAST - mean baseline", "Gain range", "Largest p"), summary)
+        rows = []
+        for mode in MODES:
+            pairs = [(j, k) for j in range(len(names[mode])) for k in range(j + 1, len(names[mode]))]
+            for agent in AGENTS:
                 runs = [resolved(r) for r in per[agent, mode]]
-                rows.append([NAMES[agent], mode] + [f"{len(runs[j] - runs[k])}/{len(runs[k] - runs[j])}"
-                                                    for j, k in pairs])
+                rows += [[NAMES[agent], mode, f"{names[mode][j]} vs {names[mode][k]}",
+                          f"{len(runs[j] - runs[k])}/{len(runs[k] - runs[j])}"] for j, k in pairs]
         print("Run-to-run variation: instances only the first/only the second run of each pair resolves.\n")
-        table(["Agent", "Mode"] + [f"{names[j]} vs {names[k]}" for j, k in pairs], rows)
+        table(("Agent", "Mode", "Runs", "Only first/only second"), rows)
     if tests:
         print(f"Bonferroni-corrected significance level over the {tests} FORECAST-baseline comparisons: "
               f"{0.05 / tests:.3g}\n")
