@@ -584,17 +584,14 @@
  },
  "revision-testinfo": {
   "files": 904,
-  "raw_bytes": 3674853,
+  "raw_bytes": 3674833,
   "tar_bytes": 4378624,
   "rewritten": 0,
   "forbidden_hits": {
    "$ANTHROPIC_API_KEY": 0,
    "$ANTHROPIC_BASE_URL": 0
   },
-  "dated_files": [
-   "forecast-results/revision/testinfo/diagnoses/matplotlib__matplotlib-24265/diagnosis.json",
-   "forecast-results/revision/testinfo/diagnoses/matplotlib__matplotlib-24265/diagnosis.txt"
-  ]
+  "dated_files": []
  },
  "revision-testinfo-qwen-forecast-mini-swe-agent": {
   "files": 2318,
@@ -763,17 +760,14 @@
  },
  "revision-withtests": {
   "files": 903,
-  "raw_bytes": 4361396,
+  "raw_bytes": 4361376,
   "tar_bytes": 5050368,
   "rewritten": 0,
   "forbidden_hits": {
    "$ANTHROPIC_API_KEY": 0,
    "$ANTHROPIC_BASE_URL": 0
   },
-  "dated_files": [
-   "forecast-results/revision/withtests/diagnoses/matplotlib__matplotlib-24265/diagnosis.json",
-   "forecast-results/revision/withtests/diagnoses/matplotlib__matplotlib-24265/diagnosis.txt"
-  ]
+  "dated_files": []
  },
  "revision-withtests-qwen-forecast-mini-swe-agent": {
   "files": 2386,
