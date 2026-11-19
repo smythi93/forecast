@@ -1,8 +1,8 @@
 {
  "top": {
   "files": 2,
-  "raw_bytes": 3431338,
-  "tar_bytes": 3432960,
+  "raw_bytes": 11536478,
+  "tar_bytes": 11537920,
   "rewritten": 0,
   "forbidden_hits": {
    "$ANTHROPIC_API_KEY": 0,
@@ -234,6 +234,881 @@
   "files": 223364,
   "raw_bytes": 6334736882,
   "tar_bytes": 6733927936,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep2": {
+  "files": 3,
+  "raw_bytes": 6876,
+  "tar_bytes": 9216,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep2-qwen-baseline-mini-swe-agent": {
+  "files": 2327,
+  "raw_bytes": 2580360684,
+  "tar_bytes": 2584524800,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep2-qwen-baseline-swe-agent": {
+  "files": 2214,
+  "raw_bytes": 6353182308,
+  "tar_bytes": 6356849664,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep2-qwen-baseline-acr": {
+  "files": 2394,
+  "raw_bytes": 326449019,
+  "tar_bytes": 330031104,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep2-qwen-baseline-repair-agent": {
+  "files": 2150,
+  "raw_bytes": 226771371,
+  "tar_bytes": 230600704,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep2-qwen-baseline-agentless": {
+  "files": 215465,
+  "raw_bytes": 5382083072,
+  "tar_bytes": 5767920128,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep2-qwen-forecast-mini-swe-agent": {
+  "files": 2381,
+  "raw_bytes": 795693378,
+  "tar_bytes": 799937024,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep2-qwen-forecast-swe-agent": {
+  "files": 2392,
+  "raw_bytes": 7992893815,
+  "tar_bytes": 7996744704,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep2-qwen-forecast-acr": {
+  "files": 2388,
+  "raw_bytes": 469805028,
+  "tar_bytes": 473351168,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep2-qwen-forecast-repair-agent": {
+  "files": 2276,
+  "raw_bytes": 243320037,
+  "tar_bytes": 247342592,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep2-qwen-forecast-agentless": {
+  "files": 228987,
+  "raw_bytes": 6477322340,
+  "tar_bytes": 6887236608,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep3": {
+  "files": 3,
+  "raw_bytes": 6876,
+  "tar_bytes": 9216,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep3-qwen-baseline-mini-swe-agent": {
+  "files": 2305,
+  "raw_bytes": 2713538697,
+  "tar_bytes": 2717662208,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep3-qwen-baseline-swe-agent": {
+  "files": 2209,
+  "raw_bytes": 6370239182,
+  "tar_bytes": 6373913600,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep3-qwen-baseline-acr": {
+  "files": 2392,
+  "raw_bytes": 326323877,
+  "tar_bytes": 329898496,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep3-qwen-baseline-repair-agent": {
+  "files": 2158,
+  "raw_bytes": 226358456,
+  "tar_bytes": 230209536,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep3-qwen-baseline-agentless": {
+  "files": 217044,
+  "raw_bytes": 5507640659,
+  "tar_bytes": 5896125952,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep3-qwen-forecast-mini-swe-agent": {
+  "files": 2373,
+  "raw_bytes": 904118606,
+  "tar_bytes": 908358144,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep3-qwen-forecast-swe-agent": {
+  "files": 2393,
+  "raw_bytes": 7871897186,
+  "tar_bytes": 7875755008,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep3-qwen-forecast-acr": {
+  "files": 2391,
+  "raw_bytes": 471336896,
+  "tar_bytes": 474867200,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep3-qwen-forecast-repair-agent": {
+  "files": 2275,
+  "raw_bytes": 247410616,
+  "tar_bytes": 251428864,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-rep3-qwen-forecast-agentless": {
+  "files": 224720,
+  "raw_bytes": 6449224142,
+  "tar_bytes": 6851338240,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-haiku-rep2": {
+  "files": 3,
+  "raw_bytes": 6877,
+  "tar_bytes": 9216,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-haiku-rep2-haiku-forecast-mini-swe-agent": {
+  "files": 2398,
+  "raw_bytes": 166030391,
+  "tar_bytes": 170323456,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-haiku-rep2-haiku-forecast-swe-agent": {
+  "files": 2400,
+  "raw_bytes": 689877155,
+  "tar_bytes": 694172672,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-haiku-rep2-haiku-forecast-acr": {
+  "files": 2367,
+  "raw_bytes": 192703892,
+  "tar_bytes": 196663808,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-haiku-rep2-haiku-forecast-repair-agent": {
+  "files": 2372,
+  "raw_bytes": 114980624,
+  "tar_bytes": 119221248,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-haiku-rep2-haiku-forecast-agentless": {
+  "files": 248429,
+  "raw_bytes": 7174642397,
+  "tar_bytes": 7621579776,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-foreign": {
+  "files": 905,
+  "raw_bytes": 2776394,
+  "tar_bytes": 3473408,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-foreign-qwen-forecast-mini-swe-agent": {
+  "files": 2320,
+  "raw_bytes": 11536209376,
+  "tar_bytes": 11540339200,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-foreign-qwen-forecast-repair-agent": {
+  "files": 2155,
+  "raw_bytes": 241556665,
+  "tar_bytes": 245361152,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-testinfo": {
+  "files": 904,
+  "raw_bytes": 3674853,
+  "tar_bytes": 4378624,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": [
+   "forecast-results/revision/testinfo/diagnoses/matplotlib__matplotlib-24265/diagnosis.json",
+   "forecast-results/revision/testinfo/diagnoses/matplotlib__matplotlib-24265/diagnosis.txt"
+  ]
+ },
+ "revision-testinfo-qwen-forecast-mini-swe-agent": {
+  "files": 2318,
+  "raw_bytes": 2693661081,
+  "tar_bytes": 2697796096,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-unordered": {
+  "files": 903,
+  "raw_bytes": 2660338,
+  "tar_bytes": 3353088,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-unordered-qwen-forecast-mini-swe-agent": {
+  "files": 2335,
+  "raw_bytes": 2412378384,
+  "tar_bytes": 2416538624,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-unordered-qwen-forecast-repair-agent": {
+  "files": 2198,
+  "raw_bytes": 261025133,
+  "tar_bytes": 264928768,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-locations": {
+  "files": 903,
+  "raw_bytes": 2492236,
+  "tar_bytes": 3191296,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-locations-qwen-forecast-mini-swe-agent": {
+  "files": 2330,
+  "raw_bytes": 2601463308,
+  "tar_bytes": 2605614592,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-locations-qwen-forecast-repair-agent": {
+  "files": 2167,
+  "raw_bytes": 231780733,
+  "tar_bytes": 235612672,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-nodiv": {
+  "files": 444,
+  "raw_bytes": 1751379,
+  "tar_bytes": 2096128,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-nodiv-qwen-forecast-mini-swe-agent": {
+  "files": 1169,
+  "raw_bytes": 375427557,
+  "tar_bytes": 377517568,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-nodiv-qwen-forecast-repair-agent": {
+  "files": 1101,
+  "raw_bytes": 127074952,
+  "tar_bytes": 129032704,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-sbfl": {
+  "files": 904,
+  "raw_bytes": 2530989,
+  "tar_bytes": 3215872,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-sbfl-qwen-forecast-mini-swe-agent": {
+  "files": 2325,
+  "raw_bytes": 2568927035,
+  "tar_bytes": 2573058048,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-atoms": {
+  "files": 378,
+  "raw_bytes": 1439411,
+  "tar_bytes": 1732608,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-atoms-qwen-forecast-mini-swe-agent": {
+  "files": 993,
+  "raw_bytes": 279754637,
+  "tar_bytes": 281521664,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-atoms-qwen-forecast-repair-agent": {
+  "files": 944,
+  "raw_bytes": 100996386,
+  "tar_bytes": 102676992,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-withtests": {
+  "files": 903,
+  "raw_bytes": 4361396,
+  "tar_bytes": 5050368,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": [
+   "forecast-results/revision/withtests/diagnoses/matplotlib__matplotlib-24265/diagnosis.json",
+   "forecast-results/revision/withtests/diagnoses/matplotlib__matplotlib-24265/diagnosis.txt"
+  ]
+ },
+ "revision-withtests-qwen-forecast-mini-swe-agent": {
+  "files": 2386,
+  "raw_bytes": 695599019,
+  "tar_bytes": 699863040,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-wording": {
+  "files": 904,
+  "raw_bytes": 2696746,
+  "tar_bytes": 3388928,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-wording-qwen-forecast-mini-swe-agent": {
+  "files": 2379,
+  "raw_bytes": 798720339,
+  "tar_bytes": 802961920,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-wording-qwen-forecast-repair-agent": {
+  "files": 2271,
+  "raw_bytes": 235075952,
+  "tar_bytes": 239120384,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-k5": {
+  "files": 852,
+  "raw_bytes": 2846937,
+  "tar_bytes": 3502080,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-k5-qwen-forecast-mini-swe-agent": {
+  "files": 2248,
+  "raw_bytes": 727981263,
+  "tar_bytes": 731919360,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-k5-qwen-forecast-repair-agent": {
+  "files": 2140,
+  "raw_bytes": 228800624,
+  "tar_bytes": 232416256,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-k20": {
+  "files": 849,
+  "raw_bytes": 4620770,
+  "tar_bytes": 5278208,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-k20-qwen-forecast-mini-swe-agent": {
+  "files": 2247,
+  "raw_bytes": 685545328,
+  "tar_bytes": 689553920,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-k20-qwen-forecast-repair-agent": {
+  "files": 2129,
+  "raw_bytes": 240996377,
+  "tar_bytes": 244661760,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-t0.4": {
+  "files": 873,
+  "raw_bytes": 3712571,
+  "tar_bytes": 4388352,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-t0.4-qwen-forecast-mini-swe-agent": {
+  "files": 2306,
+  "raw_bytes": 903836437,
+  "tar_bytes": 907954688,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-t0.4-qwen-forecast-repair-agent": {
+  "files": 2191,
+  "raw_bytes": 235875984,
+  "tar_bytes": 239733760,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-t0.8": {
+  "files": 867,
+  "raw_bytes": 3400938,
+  "tar_bytes": 4076032,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-t0.8-qwen-forecast-mini-swe-agent": {
+  "files": 2291,
+  "raw_bytes": 778019326,
+  "tar_bytes": 782111744,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "revision-t0.8-qwen-forecast-repair-agent": {
+  "files": 2181,
+  "raw_bytes": 247557130,
+  "tar_bytes": 251409920,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-01": {
+  "files": 41,
+  "raw_bytes": 1367745346,
+  "tar_bytes": 1367778816,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-02": {
+  "files": 40,
+  "raw_bytes": 1544610819,
+  "tar_bytes": 1544640512,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-03": {
+  "files": 40,
+  "raw_bytes": 2553352553,
+  "tar_bytes": 2553382400,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-04": {
+  "files": 40,
+  "raw_bytes": 2158038306,
+  "tar_bytes": 2158069248,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-05": {
+  "files": 40,
+  "raw_bytes": 1925862496,
+  "tar_bytes": 1925895168,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-06": {
+  "files": 40,
+  "raw_bytes": 1940336218,
+  "tar_bytes": 1940365824,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-07": {
+  "files": 40,
+  "raw_bytes": 1340464451,
+  "tar_bytes": 1340494336,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-08": {
+  "files": 40,
+  "raw_bytes": 404175693,
+  "tar_bytes": 404207616,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-09": {
+  "files": 40,
+  "raw_bytes": 341588167,
+  "tar_bytes": 341619712,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-10": {
+  "files": 40,
+  "raw_bytes": 552449925,
+  "tar_bytes": 552481280,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-11": {
+  "files": 40,
+  "raw_bytes": 555393110,
+  "tar_bytes": 555424256,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-12": {
+  "files": 40,
+  "raw_bytes": 2103067235,
+  "tar_bytes": 2103097856,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-13": {
+  "files": 40,
+  "raw_bytes": 3754286802,
+  "tar_bytes": 3754317824,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-14": {
+  "files": 40,
+  "raw_bytes": 4417235592,
+  "tar_bytes": 4417266688,
+  "rewritten": 0,
+  "forbidden_hits": {
+   "$ANTHROPIC_API_KEY": 0,
+   "$ANTHROPIC_BASE_URL": 0
+  },
+  "dated_files": []
+ },
+ "trees-15": {
+  "files": 40,
+  "raw_bytes": 4384439238,
+  "tar_bytes": 4384468992,
   "rewritten": 0,
   "forbidden_hits": {
    "$ANTHROPIC_API_KEY": 0,
