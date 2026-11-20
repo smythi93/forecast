@@ -1,4 +1,4 @@
-"""Pack the repair-evaluation results into one .tar.zst archive.
+"""Pack the repair-evaluation results into a .tar.zst archive.
 
 It needs only the evaluation's instance folders, <runs dir>/<model>/<instance>/, and only
 reads them. Files are archived byte for byte, unless --rewrite OLD=NEW asks to replace a
@@ -10,6 +10,8 @@ folder, <name>/, in the archive. The output directory gets
                   and every run of every model, mode and agent; with --revision, also the
                   runs of the revision (REVISION), and with --trees the traced relevance
                   trees the diagnoses were derived from
+  <trees name>.tar.zst  with --trees-name, the trees, which are then not in <name>.tar.zst;
+                  it has the same top folder, so both extract into one
   results.json    per instance the diagnosis (discriminability, causes and their types,
                   whether they name code the developer patch changes, test selection,
                   pipeline times) and per model, agent, mode and instance the repair
@@ -18,7 +20,7 @@ folder, <name>/, in the archive. The output directory gets
                   runtime); with --revision, the same per revision run; see README.md
   manifest.json   per part of the archive: files, raw bytes, rewritten occurrences,
                   forbidden hits
-  SHA256SUMS      the archive's checksum
+  SHA256SUMS      the archives' checksums
   parts/          the archive's parts, one per model, mode and agent plus the diagnoses
 
 Each part is a run of tar entries compressed as its own zstd frame, so the parts are
@@ -42,13 +44,14 @@ each with its setup files (variant.json, changed.txt, ...), the runs of the inst
 (changed.txt), and for a variant the diagnoses it injected. Reruns of single instances are
 never part of it, neither of the archive nor of results.json. --trees DIR takes
 <DIR>/<instance>/diagnosis/tree.pkl and diagnosis/events/mapping.json for every instance,
-the layout evaluation/revision/recompute.py reads.
+the layout evaluation/revision/recompute.py reads. The trees make up most of the compressed
+archive, so --trees-name NAME writes them to NAME.tar.zst on their own.
 
 --results-only writes only <out dir>/results.json, from the same runs, and packs nothing.
 
 Usage: python3 pack.py <runs dir> <out dir> [--name NAME] [--add FILE]... [--jobs N]
            [--rewrite OLD=NEW]... [--forbid STRING]... [--forbid-env NAME]... [--force]
-           [--dataset NAME] [--revision DIR] [--trees DIR] [--results-only]
+           [--dataset NAME] [--revision DIR] [--trees DIR] [--trees-name NAME] [--results-only]
 """
 import argparse, hashlib, json, os, re, subprocess, sys, tarfile
 from collections import Counter
@@ -315,6 +318,26 @@ def pack(job):
     return part, stats
 
 
+def assemble(out, name, names, manifest):
+    """Concatenate the parts *names* into <out>/<name>.tar.zst, ended by the tar end marker; returns its SHA-256."""
+    # The end marker: two zero blocks, padded to a whole tar record.
+    size = sum(manifest[n]["tar_bytes"] for n in names) + 2 * BLOCK
+    end = subprocess.run(ZSTD + ("-c",), input=b"\0" * (2 * BLOCK + -size % RECORD),
+                         stdout=subprocess.PIPE, check=True).stdout
+    archive = f"{out}/{name}.tar.zst"
+    h = hashlib.sha256()
+    with open(archive + ".tmp", "wb") as z:
+        for n in names:
+            with open(f"{out}/parts/{n}.zst", "rb") as f:
+                for block in iter(lambda: f.read(1 << 20), b""):
+                    z.write(block)
+                    h.update(block)
+        z.write(end)
+        h.update(end)
+    os.replace(archive + ".tmp", archive)
+    return h.hexdigest()
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("runs_dir")
@@ -330,6 +353,7 @@ def main():
     p.add_argument("--dataset", default=DATASET, help="SWE-bench Lite, for the developer patches")
     p.add_argument("--revision", metavar="DIR", help="the revision's runs, DIR/<run>/ (REVISION)")
     p.add_argument("--trees", metavar="DIR", help="the trees, DIR/<instance>/diagnosis/tree.pkl")
+    p.add_argument("--trees-name", metavar="NAME", help="write the trees to NAME.tar.zst, not into the archive")
     p.add_argument("--results-only", action="store_true", help="write only results.json, pack nothing")
     a = p.parse_args()
     root = os.path.abspath(os.path.expanduser(a.runs_dir))
@@ -466,29 +490,19 @@ def main():
         json.dump({n: manifest[n] for n in parts}, f, indent=1)
         f.write("\n")
 
-    # The end marker: two zero blocks, padded to a whole tar record.
-    size = sum(manifest[n]["tar_bytes"] for n in parts) + 2 * BLOCK
-    end = subprocess.run(ZSTD + ("-c",), input=b"\0" * (2 * BLOCK + -size % RECORD),
-                         stdout=subprocess.PIPE, check=True).stdout
-    archive = f"{out}/{a.name}.tar.zst"
-    h = hashlib.sha256()
-    with open(archive + ".tmp", "wb") as z:
-        for n in parts:
-            with open(f"{out}/parts/{n}.zst", "rb") as f:
-                for block in iter(lambda: f.read(1 << 20), b""):
-                    z.write(block)
-                    h.update(block)
-        z.write(end)
-        h.update(end)
-    os.replace(archive + ".tmp", archive)
+    archives = {a.name: parts}
+    if a.trees and a.trees_name:
+        archives = {a.name: [n for n in parts if not n.startswith("trees-")],
+                    a.trees_name: [n for n in parts if n.startswith("trees-")]}
+    sums = "".join(f"{assemble(out, name, names, manifest)}  {name}.tar.zst\n" for name, names in archives.items())
     with open(f"{out}/SHA256SUMS", "w") as f:
-        f.write(f"{h.hexdigest()}  {a.name}.tar.zst\n")
+        f.write(sums)
     bad = [n for n in parts if any(manifest[n]["forbidden_hits"].values())]
     dated = [n for n in parts if manifest[n].get("dated_files")]
     if bad or dated:
         sys.exit("".join([f"forbidden strings found in: {', '.join(bad)}\n" if bad else "",
                           f"run dates found in: {', '.join(dated)} (files listed in manifest.json)" if dated else ""]))
-    print(f"done: {archive}")
+    print(f"done: {', '.join(f'{out}/{name}.tar.zst' for name in archives)}")
 
 
 if __name__ == "__main__":
