@@ -547,7 +547,7 @@ The archive comes in two files, which extract into the same folder, `forecast-re
 
 | File | Content | Size | Extracted |
 |---|---|---:|---:|
-| `forecast-results.tar.zst` | this README, `results.json`, the diagnoses, every run, the repeated runs and variants | 0.6 GB | 157 GB in 2.1 million files |
+| `forecast-results.tar.zst` | this README, `results.json`, the diagnoses, every run, the repeated runs and variants | 0.9 GB | 157 GB in 2.1 million files |
 | `forecast-trees.tar.zst` | the relevance trees, in `trees/` | 11.4 GB | 29 GB |
 
 `results.json` and `analyze.py` need only the first; the trees serve to recompute
