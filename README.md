@@ -321,8 +321,9 @@ Everything needed to reproduce the results is in this repository:
 | `evaluation/revision/` | the repeated runs and the variants of the diagnosis (see [Repeated runs and variants](#repeated-runs-and-variants)) |
 
 The Zenodo record (DOI: [10.5281/zenodo.23769792](https://doi.org/10.5281/zenodo.23769792))
-holds this repository as `forecast-0.1.2.zip`, the runs as one file, `forecast-results.tar.zst`,
-this README, and `SHA256SUMS` with the checksums of both.
+holds this repository as `forecast-0.1.2.zip`, the runs in `forecast-results.tar.zst`,
+the relevance trees in `forecast-trees.tar.zst`, this README, and `SHA256SUMS` with the
+checksums of the three.
 
 ## Repeated runs and variants
 
@@ -438,16 +439,17 @@ Run the scripts from the repository root, after the [installation](#installation
    the results.
 
 5. **Results and archive.** This computes `results.json` from the per-instance files
-   and packs everything into one archive:
+   and packs everything into two archives, the runs and the trees:
 
    ```bash
    python3 evaluation/scripts/pack.py <runs> <out> --add README.md \
-       --revision <revision runs> --trees <work>
+       --revision <revision runs> --trees <work> --trees-name forecast-trees
    python3 evaluation/scripts/analyze.py --results <out>/results.json
    ```
 
    `--revision` and `--trees` are optional; they add the repeated runs and variants and
-   the relevance trees. With `--results-only`, `pack.py` writes only `<out>/results.json`
+   the relevance trees; without `--trees-name`, the trees go into the archive of the runs.
+   With `--results-only`, `pack.py` writes only `<out>/results.json`
    and packs nothing.
 
 ## Results
@@ -541,16 +543,23 @@ about three million tokens per run.
 
 ## The archive
 
-`forecast-results.tar.zst` holds this README, `results.json`, the diagnoses, every run,
-the repeated runs and variants, and the relevance trees. It is about 12 GB;
-extracted it takes about 190 GB in 2.1 million files.
+The archive comes in two files, which extract into the same folder, `forecast-results/`:
+
+| File | Content | Size | Extracted |
+|---|---|---:|---:|
+| `forecast-results.tar.zst` | this README, `results.json`, the diagnoses, every run, the repeated runs and variants | 0.6 GB | 157 GB in 2.1 million files |
+| `forecast-trees.tar.zst` | the relevance trees, in `trees/` | 11.4 GB | 29 GB |
+
+`results.json` and `analyze.py` need only the first; the trees serve to recompute
+diagnoses (`evaluation/revision/recompute.py`).
 
 ```bash
 sha256sum -c --ignore-missing SHA256SUMS       # SHA256SUMS from Zenodo or evaluation/results/
 tar --zstd -xf forecast-results.tar.zst        # or: zstd -dc forecast-results.tar.zst | tar -xf -
+tar --zstd -xf forecast-trees.tar.zst          # optional
 ```
 
-`tar --zstd` needs GNU tar and zstd. The archive was compressed with `--long=27`, which
+`tar --zstd` needs GNU tar and zstd. The archives were compressed with `--long=27`, which
 zstd decompresses without extra flags.
 
 ```
@@ -587,7 +596,7 @@ forecast-results/
       donors.json                  foreign: the instance whose chain each instance got
       diagnoses/<instance>/        a variant's diagnosis, as in diagnoses/
       <model>/<mode>/              the runs, as in <model>/<mode>/ above
-  trees/
+  trees/                           from forecast-trees.tar.zst
       instances.txt                the 300 instances
       <instance>/diagnosis/
           tree.pkl                 the traced relevance tree the diagnosis was derived from
