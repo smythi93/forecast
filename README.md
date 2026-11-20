@@ -321,7 +321,7 @@ Everything needed to reproduce the results is in this repository:
 | `evaluation/revision/` | the repeated runs and the variants of the diagnosis (see [Repeated runs and variants](#repeated-runs-and-variants)) |
 
 The runs themselves are on Zenodo as one file, `forecast-results.tar.zst`
-(DOI: _to be added_).
+(DOI: [10.5281/zenodo.23769792](https://doi.org/10.5281/zenodo.23769792)).
 
 ## Repeated runs and variants
 
@@ -541,8 +541,8 @@ about three million tokens per run.
 ## The archive
 
 `forecast-results.tar.zst` holds this README, `results.json`, the diagnoses, every run,
-the repeated runs and variants, and the relevance trees. It is about _to be added_;
-extracted it takes about _to be added_.
+the repeated runs and variants, and the relevance trees. It is about 12 GB;
+extracted it takes about 190 GB in 2.1 million files.
 
 ```bash
 sha256sum -c SHA256SUMS                        # SHA256SUMS from evaluation/results/
