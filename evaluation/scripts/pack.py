@@ -33,6 +33,8 @@ Every archived file is also checked for dates written at run time, by the same r
 forecast.run_dates removed them with after each run (patches are exempt). Any hit is
 reported (dated files are listed in manifest.json) and makes the exit status 1. Parts that already exist and
 have their checks in manifest.json are kept, so an interrupted run resumes; --force packs everything again.
+Every new part is decompressed once to check that it holds all its entries, and a lock on the output
+directory keeps a second run from writing the same parts.
 
 The developer patches and test lists come from the SWE-bench Lite dataset (--dataset,
 loaded with the `datasets` package, from its cache when offline); FORECAST never used the
@@ -53,7 +55,7 @@ Usage: python3 pack.py <runs dir> <out dir> [--name NAME] [--add FILE]... [--job
            [--rewrite OLD=NEW]... [--forbid STRING]... [--forbid-env NAME]... [--force]
            [--dataset NAME] [--revision DIR] [--trees DIR] [--trees-name NAME] [--results-only]
 """
-import argparse, hashlib, json, os, re, subprocess, sys, tarfile
+import argparse, fcntl, hashlib, json, os, re, subprocess, sys, tarfile
 from collections import Counter
 from multiprocessing import Pool
 
@@ -314,6 +316,11 @@ def pack(job):
     zstd.stdin.close()
     if zstd.wait():
         raise RuntimeError(f"zstd failed for {part}")
+    # The part must decompress to exactly the tar entries written into it.
+    check = subprocess.Popen(("zstd", "-dc", "--long=27", tmp), stdout=subprocess.PIPE)
+    size = sum(len(block) for block in iter(lambda: check.stdout.read(1 << 20), b""))
+    if check.wait() or size != stats["tar_bytes"]:
+        raise RuntimeError(f"{part} decompresses to {size} bytes, not {stats['tar_bytes']}")
     os.replace(tmp, f"{out}/parts/{part}.zst")
     return part, stats
 
@@ -359,6 +366,12 @@ def main():
     root = os.path.abspath(os.path.expanduser(a.runs_dir))
     out = os.path.abspath(os.path.expanduser(a.out_dir))
     os.makedirs(out if a.results_only else f"{out}/parts", exist_ok=True)
+    # Two runs on the same output directory would write the same parts.
+    lock = open(f"{out}/.lock", "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        sys.exit(f"another pack.py is writing to {out}")
     top = a.name
     rewrites = [tuple(s.encode() for s in r.split("=", 1)) for r in a.rewrite]
     forbidden = {s: s.encode() for s in a.forbid}
