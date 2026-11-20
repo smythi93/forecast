@@ -320,8 +320,9 @@ Everything needed to reproduce the results is in this repository:
 | `evaluation/results/` | `results.json` of the paper's runs, and the archive's `manifest.json` and `SHA256SUMS` |
 | `evaluation/revision/` | the repeated runs and the variants of the diagnosis (see [Repeated runs and variants](#repeated-runs-and-variants)) |
 
-The runs themselves are on Zenodo as one file, `forecast-results.tar.zst`
-(DOI: [10.5281/zenodo.23769792](https://doi.org/10.5281/zenodo.23769792)).
+The Zenodo record (DOI: [10.5281/zenodo.23769792](https://doi.org/10.5281/zenodo.23769792))
+holds this repository as `forecast-0.1.2.zip`, the runs as one file, `forecast-results.tar.zst`,
+this README, and `SHA256SUMS` with the checksums of both.
 
 ## Repeated runs and variants
 
@@ -545,7 +546,7 @@ the repeated runs and variants, and the relevance trees. It is about 12 GB;
 extracted it takes about 190 GB in 2.1 million files.
 
 ```bash
-sha256sum -c SHA256SUMS                        # SHA256SUMS from evaluation/results/
+sha256sum -c --ignore-missing SHA256SUMS       # SHA256SUMS from Zenodo or evaluation/results/
 tar --zstd -xf forecast-results.tar.zst        # or: zstd -dc forecast-results.tar.zst | tar -xf -
 ```
 
